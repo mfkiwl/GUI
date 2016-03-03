@@ -70,6 +70,7 @@ private:
 
     bool internalTrigger;
 	bool recordToNpx;
+	int option;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NeuropixEditor);
 
@@ -106,6 +107,8 @@ public:
 	SourceNode* processor;
 	ScopedPointer<Viewport> neuropixViewport;
 	ScopedPointer<NeuropixInterface> neuropixInterface;
+
+	int option;
 
 };
 

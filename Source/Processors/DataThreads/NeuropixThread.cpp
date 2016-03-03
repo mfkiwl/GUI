@@ -134,9 +134,6 @@ bool NeuropixThread::startAcquisition()
 	ErrorCode err4 = neuropix.neuropix_resetDatapath();
 	std::cout << "reset datapath error code: " << err4 << std::endl;
 
-	// start data stream
-	DigitalControlErrorCode err5 = neuropix.neuropix_nrst(true);
-	std::cout << "nrst 2 error code: " << err5 << std::endl;
 
 	if (internalTrigger)
 	{
@@ -167,11 +164,27 @@ bool NeuropixThread::startAcquisition()
 	counter = 0;
 	timestamp = 0;
 	eventCode = 0;
+	maxCounter = 0;
 	  
-	startThread();
+	startTimer(5000);
+	//startThread();
 
 	return true;
 }
+
+void NeuropixThread::timerCallback()
+{
+
+	stopTimer();
+
+	// start data stream
+	DigitalControlErrorCode err5 = neuropix.neuropix_nrst(true);
+	std::cout << "nrst 2 error code: " << err5 << std::endl;
+
+	startThread();
+
+}
+
 
 /** Stops data transfer.*/
 bool NeuropixThread::stopAcquisition()
@@ -324,11 +337,14 @@ bool NeuropixThread::updateBuffer()
 
 		if (counter <= 0)
 		{
-			std::cout << timestamp << ", ";
+			std::cout << maxCounter << ", ";
 			std::cout << neuropix.neuropix_fifoFilling() << std::endl;
 			counter = 5000;
 		}
 
+		if (packet.ctrs[0][0] > maxCounter)
+			maxCounter = packet.ctrs[0][0];
+		
 		counter--;
 
 		for (int i = 0; i < 12; i++)

@@ -74,6 +74,8 @@ NeuropixEditor::NeuropixEditor(GenericProcessor* parentNode, NeuropixThread* t, 
 	addAndMakeVisible(recordLabel);
 
 	thread = t;
+	option = 1;
+	canvas = nullptr;
 }
 
 NeuropixEditor::~NeuropixEditor()
@@ -85,9 +87,11 @@ void NeuropixEditor::comboBoxChanged(ComboBox* comboBox)
 {
 	if (comboBox == optionComboBox)
 	{
-		int selectedOption = comboBox->getSelectedId();
+		option = comboBox->getSelectedId();
 
-		canvas->setOption(selectedOption);
+		if (canvas != nullptr)
+			canvas->setOption(option);
+
 	}
 }
 
@@ -151,6 +155,7 @@ Visualizer* NeuropixEditor::createNewCanvas(void)
 	GenericProcessor* processor = (GenericProcessor*) getProcessor();
 	std::cout << "Got processor." << std::endl;
     canvas = new NeuropixCanvas(processor, thread);
+	canvas->setOption(option);
 	std::cout << "Created canvas." << std::endl;
     return canvas;
 }
@@ -169,6 +174,7 @@ NeuropixCanvas::NeuropixCanvas(GenericProcessor* p, NeuropixThread* thread)
 
 	resized();
 	update();
+	option = 1;
 }
 
 NeuropixCanvas::~NeuropixCanvas()
@@ -176,9 +182,12 @@ NeuropixCanvas::~NeuropixCanvas()
 
 }
 
-void NeuropixCanvas::setOption(int option)
+void NeuropixCanvas::setOption(int opt)
 {
-	neuropixInterface->setOption(option);
+	option = opt;
+
+	if (neuropixInterface != 0)
+		neuropixInterface->setOption(option);
 }
 
 void NeuropixCanvas::paint(Graphics& g)

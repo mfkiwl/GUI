@@ -44,7 +44,7 @@
 
 */
 
-class NeuropixThread : public DataThread
+class NeuropixThread : public DataThread, public Timer
 {
 
 public:
@@ -114,6 +114,9 @@ public:
 	/** Loads gain calibration settings stored on EEPROM. */
 	void loadGainSettings();
 
+	/** Starts data acquisition after a certain time.*/
+	void timerCallback();
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NeuropixThread);
 
 private:
@@ -141,6 +144,7 @@ private:
 
 	int64 timestamp;
 	uint64 eventCode;
+	int maxCounter;
 
 };
 
