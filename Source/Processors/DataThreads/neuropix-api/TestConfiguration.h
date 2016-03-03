@@ -9,7 +9,7 @@
 
 #include <vector>
 
-class TestConfiguration
+class DLL_IMPORT_EXPORT TestConfiguration
 {
 public:
   TestConfiguration();

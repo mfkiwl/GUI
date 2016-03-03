@@ -70,7 +70,7 @@ struct AdditionalSettings {
 
 struct AsicID;
 
-class BaseConfiguration
+class DLL_IMPORT_EXPORT BaseConfiguration
 {
 public:
   BaseConfiguration(AsicID * asicid);

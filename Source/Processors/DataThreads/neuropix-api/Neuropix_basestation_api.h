@@ -85,10 +85,7 @@ enum OpenErrorCode
                                        startTrigger_output */
   CONFIG_CALIB_FAILED          = 19, /**< error while configuring members for
                                        calibration */
-  CONFIG_EEPROM_FAILED         = 20, /**< error while configuring the eeprom */
-  CONFIG_HS_REG_FAILED         = 21, /**< error while configuring headstage
-                                       registers */
-  CONFIG_DATAMODE_FAILED       = 22  /**< error while setting the datamode */
+  CONFIG_EN_EEPROM_FAILED      = 20  /**< error while enabling the eeprom */
 };
 
 enum ConfigDesError
@@ -408,13 +405,6 @@ public:
    * @return EEPROM_SUCCESS if successful
    */
   EepromErrorCode neuropix_writeId(AsicID & id);
-
-  /**
-   * This function returns the ASIC ID member of the api.
-   *
-   * @return the ASIC ID to return
-   */
-  AsicID neuropix_getId();
 
   /**
    * This function reads the gain correction factors from the EEPROM and writes
@@ -1905,7 +1895,7 @@ private:
   double * time_;
   float * electrodedata_;
 
-  std::map<std::string, unsigned short> DACTable_;
+  std::map<std::string, unsigned short int> DACTable_;
 
   /**
    * This function handles the startup configuration steps for adc calibration.
@@ -2040,20 +2030,6 @@ private:
   ReadCsvErrorCode readChainFromCsv(std::string filename, std::vector<bool> & chain);
 
   /**
-   * This function resets all relevant headstage registers.
-   *
-   * @return UART_SUCCESS if succesful
-   */
-  UartErrorCode resetHeadstageRegisters();
-
-  /**
-   * This function sets up a configuration link.
-   *
-   * @return SUCCESS if succesful
-   */
-  ErrorCode setupConfigLink();
-
-  /**
    * flush DRAM fifo / data connection
    */
   virtual ErrorCode neuropix_flushData();
@@ -2079,7 +2055,7 @@ private:
   // TODO
   void neuropix_resetUart();
 
-  // method to wait x milliseconds
+  // method to wait x seconds
   void neuropix_milliSleep(unsigned int milliseconds);
 };
 

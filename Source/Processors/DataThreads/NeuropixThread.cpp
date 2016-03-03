@@ -166,7 +166,7 @@ bool NeuropixThread::startAcquisition()
 	eventCode = 0;
 	maxCounter = 0;
 	  
-	startTimer(5000);
+	startTimer(2250);
 	//startThread();
 
 	return true;
