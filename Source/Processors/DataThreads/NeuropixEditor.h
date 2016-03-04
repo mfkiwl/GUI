@@ -138,6 +138,7 @@ public:
 	void loadParameters(XmlElement* xml);
 
     void setAnnotationLabel(String, Colour);
+	void updateInfoString();
 
 private:
 	int option;

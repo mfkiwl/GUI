@@ -92,6 +92,8 @@ void NeuropixEditor::comboBoxChanged(ComboBox* comboBox)
 		if (canvas != nullptr)
 			canvas->setOption(option);
 
+		thread->setProbeOption(option);
+
 	}
 }
 
@@ -254,12 +256,7 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
 {
 	cursorType = MouseCursor::NormalCursor;
 
-	String hwVersion;
-	String bsVersion;
-	String apiVersion;
-	String probeType;
-
-	thread->getInfo(hwVersion, bsVersion, apiVersion, probeType);
+	
 
 	isOverZoomRegion = false;
 	isOverUpperBorder = false;
@@ -453,15 +450,8 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
     addAndMakeVisible(annotationButton);
 	addAndMakeVisible(calibrationButton);
 
-	String labelString = "Hardware version: ";
-	labelString += hwVersion;
-	labelString += "\n\nBasestation version: ";
-	labelString += bsVersion;
-	labelString += "\n\nAPI version: ";
-	labelString += apiVersion;
-	labelString += "\n\nProbe option: ";
-	labelString += probeType;
-	infoLabel = new Label("INFO", labelString);
+	
+	infoLabel = new Label("INFO", "INFO");
 	infoLabel->setFont(Font("Small Text", 13, Font::plain));
 	infoLabel->setBounds(550, 10, 300, 250);
 	infoLabel->setColour(Label::textColourId, Colours::grey);
@@ -532,11 +522,33 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
 	std::cout << "Created Neuropix Interface" << std::endl;
 
 	resetParameters();
+	updateInfoString();
 
 }
 
 NeuropixInterface::~NeuropixInterface()
 {
+
+}
+
+void NeuropixInterface::updateInfoString()
+{
+	String hwVersion;
+	String bsVersion;
+	String apiVersion;
+	String probeType;
+
+	thread->getInfo(hwVersion, bsVersion, apiVersion, probeType);
+	String labelString = "Hardware version: ";
+	labelString += hwVersion;
+	labelString += "\n\nBasestation version: ";
+	labelString += bsVersion;
+	labelString += "\n\nAPI version: ";
+	labelString += apiVersion;
+	labelString += "\n\nProbe option: ";
+	labelString += option;
+
+	infoLabel->setText(labelString, dontSendNotification);
 
 }
 
@@ -889,6 +901,7 @@ void NeuropixInterface::setOption(int o)
 	}
 
 	updateAvailableRefs();
+	updateInfoString();
 
 	repaint();
 }

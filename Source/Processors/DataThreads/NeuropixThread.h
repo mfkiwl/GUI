@@ -114,6 +114,9 @@ public:
 	/** Loads gain calibration settings stored on EEPROM. */
 	void loadGainSettings();
 
+	/** Manually set probe option. */
+	void setProbeOption(int option);
+
 	/** Starts data acquisition after a certain time.*/
 	void timerCallback();
 

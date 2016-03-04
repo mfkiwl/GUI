@@ -119,6 +119,12 @@ void NeuropixThread::getInfo(String& hwVersion, String& bsVersion, String& apiVe
 	asicInfo = String(asicId.probeType);
 }
 
+void NeuropixThread::setProbeOption(int option)
+{
+	asicId.probeType = option - 1;
+	neuropix.neuropix_writeId(asicId);
+}
+
 /** Initializes data transfer.*/
 bool NeuropixThread::startAcquisition()
 {
