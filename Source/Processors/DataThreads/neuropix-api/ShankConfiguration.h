@@ -34,7 +34,7 @@ enum ElectrodeConnection
 
 struct AsicID;
 
-class DLL_IMPORT_EXPORT ShankConfiguration
+class ShankConfiguration
 {
 public:
   ShankConfiguration(AsicID * asicid);

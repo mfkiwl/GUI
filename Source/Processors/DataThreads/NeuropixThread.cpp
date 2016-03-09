@@ -343,7 +343,7 @@ bool NeuropixThread::updateBuffer()
 
 		if (counter <= 0)
 		{
-			std::cout << maxCounter << ", ";
+			std::cout << packet.synchronization[0] << ", ";
 			std::cout << neuropix.neuropix_fifoFilling() << std::endl;
 			counter = 5000;
 		}
@@ -355,7 +355,7 @@ bool NeuropixThread::updateBuffer()
 
 		for (int i = 0; i < 12; i++)
 		{
-			eventCode = 0; // (uint64) packet.synchronization[i]; // currently returning 65535
+			eventCode = (uint64) packet.synchronization[i]; // currently returning 65535
 
 			for (int j = 0; j < 384; j++)
 			{
