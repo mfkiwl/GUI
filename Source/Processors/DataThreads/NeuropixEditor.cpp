@@ -521,6 +521,8 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
 
 	std::cout << "Created Neuropix Interface" << std::endl;
 
+	wasReset = false;
+
 	resetParameters();
 	updateInfoString();
 
@@ -554,16 +556,27 @@ void NeuropixInterface::updateInfoString()
 
 void NeuropixInterface::resetParameters()
 {
-	thread->setAllApGains(0);
-	thread->setAllLfpGains(0);
-	thread->setAllReferences(0);
-	thread->setFilter(0);
 
-	lfpGainComboBox->setSelectedId(1);
-	apGainComboBox->setSelectedId(1);
-	referenceComboBox->setSelectedId(1);
-	filterComboBox->setSelectedId(1);
+	std::cout << "Was reset? " << wasReset << std::endl;
 
+	if (!wasReset)
+	{
+		std::cout << "Resetting parameters... " << std::endl;
+		//thread->setAllApGains(3);
+		//thread->setAllLfpGains(3);
+		//thread->setAllReferences(0);
+		//thread->setFilter(0);
+
+		lfpGainComboBox->setSelectedId(4, dontSendNotification);
+		apGainComboBox->setSelectedId(4, dontSendNotification);
+		referenceComboBox->setSelectedId(1, dontSendNotification);
+		filterComboBox->setSelectedId(1, dontSendNotification);
+	}
+
+	wasReset = true;
+
+
+	
 }
 
 void NeuropixInterface::labelTextChanged(Label* label)

@@ -324,7 +324,7 @@ class DLL_IMPORT_EXPORT Neuropix_basestation_api
 {
 public:
   Neuropix_basestation_api();
-  virtual ~Neuropix_basestation_api();
+  ~Neuropix_basestation_api();
 
 
   /**

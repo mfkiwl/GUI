@@ -172,7 +172,7 @@ bool NeuropixThread::startAcquisition()
 	eventCode = 0;
 	maxCounter = 0;
 	  
-	startTimer(2250);
+	startTimer(500);
 	//startThread();
 
 	return true;
@@ -341,17 +341,17 @@ bool NeuropixThread::updateBuffer()
 	{
 		float data[384];
 
-		if (counter <= 0)
-		{
-			std::cout << packet.synchronization[0] << ", ";
-			std::cout << neuropix.neuropix_fifoFilling() << std::endl;
-			counter = 5000;
-		}
+		//if (counter <= 0)
+		//{
+		//	std::cout << packet.synchronization[0] << ", ";
+		//	std::cout << neuropix.neuropix_fifoFilling() << std::endl;
+		//	counter = 5000;
+		//}
 
-		if (packet.ctrs[0][0] > maxCounter)
-			maxCounter = packet.ctrs[0][0];
+		//if (packet.ctrs[0][0] > maxCounter)
+		//	maxCounter = packet.ctrs[0][0];
 		
-		counter--;
+		//counter--;
 
 		for (int i = 0; i < 12; i++)
 		{
@@ -361,11 +361,11 @@ bool NeuropixThread::updateBuffer()
 			{
 				data[j] = (packet.apData[i][j] - 0.6) / gains[apGains[j]] * 1000000.0f; // convert to microvolts
 			}
-				
-			dataBuffer->addToBuffer(data, &timestamp, &eventCode, 1);
-		}
 
-		timestamp += 12;
+			dataBuffer->addToBuffer(data, &timestamp, &eventCode, 1);
+
+			timestamp += 1;
+		}
 
 		//std::cout << "READ SUCCESS!" << std::endl;	
 		

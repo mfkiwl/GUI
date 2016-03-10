@@ -232,6 +232,7 @@ private:
 	int getConnectionForChannel(int);
 
 	void resetParameters();
+	bool wasReset;
 };
 
 class Annotation
