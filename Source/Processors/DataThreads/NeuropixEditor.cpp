@@ -27,6 +27,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 NeuropixEditor::NeuropixEditor(GenericProcessor* parentNode, NeuropixThread* t, bool useDefaultParameterEditors)
  : VisualizerEditor(parentNode, useDefaultParameterEditors)
 {
+
+	thread = t;
+	option = thread->getProbeOption();
+	canvas = nullptr;
+
 	desiredWidth = 200;
 	tabText = "Neuropix";
 
@@ -38,8 +43,8 @@ NeuropixEditor::NeuropixEditor(GenericProcessor* parentNode, NeuropixThread* t, 
 	{
 		optionComboBox->addItem("Option " + String(k),k);
 	}
-	optionComboBox->setSelectedId(1, dontSendNotification);
-	addAndMakeVisible(optionComboBox);
+	optionComboBox->setSelectedId(option, dontSendNotification);
+	//addAndMakeVisible(optionComboBox);
 
 	triggerTypeButton = new UtilityButton("INTERNAL", Font("Small Text", 13, Font::plain));
     triggerTypeButton->setRadius(3.0f);
@@ -73,9 +78,7 @@ NeuropixEditor::NeuropixEditor(GenericProcessor* parentNode, NeuropixThread* t, 
 	recordLabel->setColour(Label::textColourId, Colours::darkgrey);
 	addAndMakeVisible(recordLabel);
 
-	thread = t;
-	option = 1;
-	canvas = nullptr;
+	
 }
 
 NeuropixEditor::~NeuropixEditor()
@@ -92,7 +95,7 @@ void NeuropixEditor::comboBoxChanged(ComboBox* comboBox)
 		if (canvas != nullptr)
 			canvas->setOption(option);
 
-		thread->setProbeOption(option);
+		//thread->setProbeOption(option);
 
 	}
 }
@@ -176,7 +179,7 @@ NeuropixCanvas::NeuropixCanvas(GenericProcessor* p, NeuropixThread* thread)
 
 	resized();
 	update();
-	option = 1;
+	setOption(thread->getProbeOption());
 }
 
 NeuropixCanvas::~NeuropixCanvas()
@@ -272,6 +275,7 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
 		channelApGain.add(0);
 		channelSelectionState.add(0);
 		channelOutput.add(1);
+		channelColours.add(Colour(20,20,20));
 	}
 
 	visualizationMode = 0;
@@ -374,6 +378,13 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
 	filterComboBox->addItem("1 kHz", 4);
 	filterComboBox->setSelectedId(1);
 
+	activityViewComboBox = new ComboBox("ActivityViewComboBox");
+	activityViewComboBox->setBounds(550, 350, 75, 22);
+	activityViewComboBox->addListener(this);
+	activityViewComboBox->addItem("Spikes", 1);
+	activityViewComboBox->addItem("LFP", 2);
+	activityViewComboBox->setSelectedId(1);
+
 	enableButton = new UtilityButton("ENABLE", Font("Small Text", 13, Font::plain));
     enableButton->setRadius(3.0f);
     enableButton->setBounds(400,95,65,22);
@@ -422,6 +433,12 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
     referenceViewButton->addListener(this);
     referenceViewButton->setTooltip("View reference of each channel");
 
+	activityViewButton = new UtilityButton("VIEW", Font("Small Text", 12, Font::plain));
+	activityViewButton->setRadius(3.0f);
+	activityViewButton->setBounds(640, 353, 45, 18);
+	activityViewButton->addListener(this);
+	activityViewButton->setTooltip("View activity for each channel");
+
     annotationButton = new UtilityButton("ADD", Font("Small Text", 12, Font::plain));
     annotationButton->setRadius(3.0f);
     annotationButton->setBounds(400,480,40,18);
@@ -438,6 +455,7 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
     addAndMakeVisible(apGainComboBox);
     addAndMakeVisible(referenceComboBox);
     addAndMakeVisible(filterComboBox);
+	addAndMakeVisible(activityViewComboBox);
 
     addAndMakeVisible(enableButton);
     addAndMakeVisible(selectAllButton);
@@ -449,6 +467,7 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
     addAndMakeVisible(referenceViewButton);
     addAndMakeVisible(annotationButton);
 	addAndMakeVisible(calibrationButton);
+	addAndMakeVisible(activityViewButton);
 
 	
 	infoLabel = new Label("INFO", "INFO");
@@ -474,6 +493,12 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
     referenceLabel->setBounds(396,230,100,20);
     referenceLabel->setColour(Label::textColourId, Colours::grey);
     addAndMakeVisible(referenceLabel);
+
+	activityViewLabel = new Label("VISUALIZER", "VISUALIZER");
+	activityViewLabel->setFont(Font("Small Text", 13, Font::plain));
+	activityViewLabel->setBounds(545, 325, 100, 20);
+	activityViewLabel->setColour(Label::textColourId, Colours::grey);
+	addAndMakeVisible(activityViewLabel);
 
     filterLabel = new Label("FILTER", "FILTER CUT (GLOBAL)");
     filterLabel->setFont(Font("Small Text", 13, Font::plain));
@@ -525,6 +550,9 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
 
 	resetParameters();
 	updateInfoString();
+
+	inputBuffer = thread->getDataBufferAddress();
+	displayBuffer.setSize(768, 10000);
 
 }
 
@@ -589,6 +617,15 @@ void NeuropixInterface::labelTextChanged(Label* label)
 
 void NeuropixInterface::comboBoxChanged(ComboBox* comboBox)
 {
+
+    if (comboBox == activityViewComboBox)
+	{
+		if (visualizationMode > 3)
+			visualizationMode = comboBox->getSelectedId() + 3;
+
+		return;
+	}
+
 	if (!editor->acquisitionIsActive)
 	{
 		if (comboBox == apGainComboBox)
@@ -661,6 +698,7 @@ void NeuropixInterface::comboBoxChanged(ComboBox* comboBox)
 
 			thread->setFilter(filterSetting);
 		}
+		
 
 		repaint();
 	} 
@@ -690,20 +728,33 @@ void NeuropixInterface::buttonClicked(Button* button)
 	} else if (button == enableViewButton)
 	{
 		visualizationMode = 0;
+		stopTimer();
 		repaint();
 	} 
 	 else if (button == apGainViewButton)
 	{
 		visualizationMode = 1;
+		stopTimer();
 		repaint();
 	} else if (button == lfpGainViewButton)
 	{
 		visualizationMode = 2;
+		stopTimer();
 		repaint();
-	} else if (button == referenceViewButton)
+	}
+	else if (button == referenceViewButton)
 	{
 		visualizationMode = 3;
+		stopTimer();
 		repaint();
+	} else if (button == activityViewButton)
+	{
+		if (activityViewComboBox->getSelectedId() == 1)
+			visualizationMode = 4; // spikes
+		else
+			visualizationMode = 5; // lfp
+
+		startTimer(1000);
 	} else if (button == enableButton)
 	{
 		if (!editor->acquisitionIsActive)
@@ -1664,9 +1715,72 @@ Colour NeuropixInterface::getChannelColour(int i)
 			return Colour(200-10*channelReference[i], 110-10*channelReference[i], 20*channelReference[i]);
 		} 
 	}
-
-	
+	else if (visualizationMode == 4) // SPIKES
+	{
+		if (channelStatus[i] == -1) // not available
+		{
+			return Colours::grey;
+		}
+		else {
+			return channelColours[i];
+		}
+		
+	}
+	else if (visualizationMode == 5) // LFP
+	{
+		if (channelStatus[i] == -1)
+		{
+			return Colours::grey;
+		}
+		else {
+			return channelColours[i];
+		}	
+	}
 }
+
+void NeuropixInterface::timerCallback()
+{
+	Random random;
+	uint64 timestamp;
+	uint64 eventCode;
+
+	int numSamples;
+
+	if (editor->acquisitionIsActive)
+		numSamples = 10;
+	else
+		numSamples = 0;
+	
+	//
+
+	if (numSamples > 0)
+	{
+		for (int i = 0; i < 966; i++)
+		{
+			if (visualizationMode == 4)
+				channelColours.set(i, Colour(random.nextInt(256), random.nextInt(256), 0));
+			else
+				channelColours.set(i, Colour(0, random.nextInt(256), random.nextInt(256)));
+		}
+	}
+	else {
+		for (int i = 0; i < 966; i++)
+		{
+			channelColours.set(i, Colour(20, 20, 20));
+		}
+	}
+
+	// NOT WORKING:
+	{
+		ScopedLock(*thread->getMutex());
+		int numSamples2 = inputBuffer->readAllFromBuffer(displayBuffer, &timestamp, &eventCode, 10000);
+	}
+	//
+
+	repaint();
+}
+
+
 
 int NeuropixInterface::getChannelForElectrode(int ch)
 {

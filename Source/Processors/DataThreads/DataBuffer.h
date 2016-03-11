@@ -51,7 +51,7 @@ public:
     int getNumSamples();
 
     /** Copies as many samples as possible from the DataBuffer to an AudioSampleBuffer.*/
-    int readAllFromBuffer(AudioSampleBuffer& data, uint64* ts, uint64* eventCodes, int maxSize);
+    int readAllFromBuffer(AudioSampleBuffer& data, uint64* ts, uint64* eventCodes, int maxSize, bool getLock = false);
 
     /** Resizes the data buffer */
     void resize(int chans, int size);
@@ -64,6 +64,8 @@ private:
     HeapBlock<uint64> eventCodeBuffer;
 
     int numChans;
+
+	CriticalSection lock;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DataBuffer);
 

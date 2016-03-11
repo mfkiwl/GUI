@@ -112,7 +112,7 @@ public:
 
 };
 
-class NeuropixInterface: public Component, public Button::Listener, public ComboBox::Listener, public Label::Listener
+class NeuropixInterface : public Component, public Button::Listener, public ComboBox::Listener, public Label::Listener, public Timer
 {
 public:
 	NeuropixInterface(NeuropixThread*, NeuropixEditor*);
@@ -140,16 +140,21 @@ public:
     void setAnnotationLabel(String, Colour);
 	void updateInfoString();
 
+	void timerCallback();
+
 private:
 	int option;
 
 	NeuropixThread* thread;
 	NeuropixEditor* editor;
+	DataBuffer* inputBuffer;
+	AudioSampleBuffer displayBuffer;
 
 	ScopedPointer<ComboBox> lfpGainComboBox;
 	ScopedPointer<ComboBox> apGainComboBox;
 	ScopedPointer<ComboBox> referenceComboBox;
 	ScopedPointer<ComboBox> filterComboBox;
+	ScopedPointer<ComboBox> activityViewComboBox;
 
 	ScopedPointer<UtilityButton> enableButton;
 	ScopedPointer<UtilityButton> selectAllButton;
@@ -160,6 +165,7 @@ private:
 	ScopedPointer<Label> referenceLabel;
 	ScopedPointer<Label> filterLabel;
 	ScopedPointer<Label> outputLabel;
+	ScopedPointer<Label> activityViewLabel;
 	ScopedPointer<Label> annotationLabelLabel;
 	ScopedPointer<Label> annotationLabel;
 
@@ -167,6 +173,7 @@ private:
 	ScopedPointer<UtilityButton> lfpGainViewButton;
 	ScopedPointer<UtilityButton> apGainViewButton;
 	ScopedPointer<UtilityButton> referenceViewButton;
+	ScopedPointer<UtilityButton> activityViewButton;
 	ScopedPointer<UtilityButton> outputOnButton;
 	ScopedPointer<UtilityButton> outputOffButton;
 	ScopedPointer<UtilityButton> annotationButton;
@@ -184,6 +191,8 @@ private:
 	Array<int> option1and2refs;
 	Array<int> option3refs;
 	Array<int> option4refs;
+
+	Array<Colour> channelColours;
 
 	Array<int> refs;
 

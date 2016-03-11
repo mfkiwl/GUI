@@ -26,7 +26,8 @@
 NeuropixThread::NeuropixThread(SourceNode* sn) : DataThread(sn), baseStationAvailable(false)
 {
 
-	dataBuffer = new DataBuffer(384, 10000); // start with 384 channels and automatically resize
+	dataBuffer = new DataBuffer(768, 10000); // start with 768 channels and automatically resize
+	displayBuffer = new DataBuffer(768, 10000);
 
 	// channel selections:
 	// Options 1 & 2 -- fixed 384 channels
@@ -37,6 +38,8 @@ NeuropixThread::NeuropixThread(SourceNode* sn) : DataThread(sn), baseStationAvai
 	{
 		lfpGains.add(0);
 		apGains.add(0);
+		channelMap.add(i);
+		outputOn.add(true);
 	}
 
 	gains.add(50);
@@ -87,7 +90,7 @@ void NeuropixThread::openConnection()
 	std::cout << "  Hardware version number: " << hw_version.major << "." << hw_version.minor << std::endl;
 	std::cout << "  Basestation version number: " << String(bs_version) << "." << String(bs_revision) << std::endl;
 	std::cout << "  API version number: " << vn.major << "." << vn.minor << std::endl;
-	std::cout << "  Asic info: " << asicId.probeType << std::endl;
+	std::cout << "  Asic info: " << String(asicId.probeType) << std::endl;
 
 	// prepare probe for streaming data
 	ErrorCode err1 = neuropix.neuropix_datamode(true);
@@ -119,10 +122,19 @@ void NeuropixThread::getInfo(String& hwVersion, String& bsVersion, String& apiVe
 	asicInfo = String(asicId.probeType);
 }
 
-void NeuropixThread::setProbeOption(int option)
+int NeuropixThread::getProbeOption()
 {
-	asicId.probeType = option - 1;
-	neuropix.neuropix_writeId(asicId);
+	//option = asicId.probeType;
+	//asicId.probeType = option - 1;
+	//neuropix.neuropix_writeId(asicId);
+	uint8 option = neuropix.neuropix_getOption();
+
+	return option + 1;
+}
+
+DataBuffer* NeuropixThread::getDataBufferAddress()
+{
+	return displayBuffer;
 }
 
 /** Initializes data transfer.*/
@@ -131,6 +143,7 @@ bool NeuropixThread::startAcquisition()
 
 	// clear the internal buffer
 	dataBuffer->clear();
+	displayBuffer->clear();
 
 	// stop data stream
 	DigitalControlErrorCode err3 = neuropix.neuropix_nrst(false);
@@ -218,7 +231,20 @@ bool NeuropixThread::stopAcquisition()
 /** Returns the number of continuous headstage channels the data source can provide.*/
 int NeuropixThread::getNumHeadstageOutputs()
 {
-	return 384;
+	int totalChans = 0;
+
+	for (int i = 0; i < outputOn.size(); i++)
+	{
+		if (outputOn[i])
+			totalChans++;
+	}
+
+	totalChans *= 2; // account for LFP channels
+
+	dataBuffer->resize(totalChans, 10000);
+	displayBuffer->resize(totalChans, 10000);
+
+	return totalChans;
 }
 
 /** Returns the number of continuous aux channels the data source can provide.*/
@@ -256,6 +282,7 @@ void NeuropixThread::selectElectrode(int chNum, int connection)
 	ShankConfigErrorCode scec = neuropix.neuropix_selectElectrode(chNum, connection);
 
 	std::cout << "Connecting input " << chNum << " to channel " << connection << "; error code = " << scec << std::endl;
+
 }
 
 void NeuropixThread::setReference(int chNum, int refSetting)
@@ -339,7 +366,7 @@ bool NeuropixThread::updateBuffer()
 
 	if (rec == READ_SUCCESS)
 	{
-		float data[384];
+		float data[768];
 
 		//if (counter <= 0)
 		//{
@@ -360,10 +387,10 @@ bool NeuropixThread::updateBuffer()
 			for (int j = 0; j < 384; j++)
 			{
 				data[j] = (packet.apData[i][j] - 0.6) / gains[apGains[j]] * 1000000.0f; // convert to microvolts
+				data[j+384] = (packet.lfpData[i] - 0.6) / gains[lfpGains[j]] * 1000000.0f; // convert to microvolts
 			}
 
 			dataBuffer->addToBuffer(data, &timestamp, &eventCode, 1);
-
 			timestamp += 1;
 		}
 

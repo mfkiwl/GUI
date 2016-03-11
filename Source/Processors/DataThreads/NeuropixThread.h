@@ -114,11 +114,19 @@ public:
 	/** Loads gain calibration settings stored on EEPROM. */
 	void loadGainSettings();
 
-	/** Manually set probe option. */
-	void setProbeOption(int option);
+	/** Retrieve probe option. */
+	int getProbeOption();
 
 	/** Starts data acquisition after a certain time.*/
 	void timerCallback();
+
+	/** Returns a pointer to a data buffer */
+	DataBuffer* getDataBufferAddress();
+
+	CriticalSection* getMutex()
+	{
+		return &displayMutex;
+	}
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NeuropixThread);
 
@@ -132,6 +140,8 @@ private:
 	long int counter;
 	int recordingNumber;
 
+	CriticalSection displayMutex;
+
 	VersionNumber hw_version;
 	unsigned char bs_version;
 	unsigned char bs_revision;
@@ -141,9 +151,13 @@ private:
 	Array<int> gains;
 	Array<int> apGains;
 	Array<int> lfpGains;
+	Array<int> channelMap;
+	Array<bool> outputOn;
 
 	void openConnection();
 	void closeConnection();
+
+	ScopedPointer<DataBuffer> displayBuffer;
 
 	int64 timestamp;
 	uint64 eventCode;
