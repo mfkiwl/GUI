@@ -29,6 +29,7 @@ HDF5Recording::HDF5Recording() : processorIndex(-1), hasAcquired(false)
     //timestamp = 0;
     scaledBuffer = new float[MAX_BUFFER_SIZE];
     intBuffer = new int16[MAX_BUFFER_SIZE];
+	registeredLfpProcessor = false;
 }
 
 HDF5Recording::~HDF5Recording()
@@ -47,10 +48,10 @@ String HDF5Recording::getEngineID()
 //     this->timestamp = timestamp;
 // }
 
-void HDF5Recording::registerProcessor(GenericProcessor* proc)
+void HDF5Recording::registerProcessor(float sampleRate)
 {
     HDF5RecordingInfo* info = new HDF5RecordingInfo();
-    info->sample_rate = proc->getSampleRate();
+	info->sample_rate = sampleRate;
     info->bit_depth = 16;
     info->multiSample = false;
     infoArray.add(info);
@@ -76,7 +77,12 @@ void HDF5Recording::resetChannels()
 
 void HDF5Recording::addChannel(int index, Channel* chan)
 {
-    processorMap.add(processorIndex);
+	if (chan->nodeId == 99 && !registeredLfpProcessor)
+	{
+		registerProcessor(2500.0);
+		registeredLfpProcessor = true;
+	}
+	processorMap.add(processorIndex);
 }
 
 void HDF5Recording::openFiles(File rootFolder, int experimentNumber, int recordingNumber)
@@ -95,7 +101,7 @@ void HDF5Recording::openFiles(File rootFolder, int experimentNumber, int recordi
     infoArray[0]->name = String("Open Ephys Recording #") + String(recordingNumber);
 
     if (hasAcquired)
-        infoArray[0]->start_time = (*timestamps)[getChannel(0)->sourceNodeId]; //(*timestamps).begin()->first;
+		infoArray[0]->start_time = (*timestamps)[getChannel(0)->sourceNodeId]; //(*timestamps).begin()->first;
     else
         infoArray[0]->start_time = 0;
 
@@ -106,10 +112,14 @@ void HDF5Recording::openFiles(File rootFolder, int experimentNumber, int recordi
     for (int i = 0; i < processorMap.size(); i++)
     {
         int index = processorMap[i];
+		
         if (getChannel(i)->getRecordState())
         {
 			if (!fileArray[index]->isOpen())
             {
+				std::cout << "index = " << index;
+				std::cout << ", nodeID = " << getChannel(i)->nodeId;
+				std::cout << "Opening file " << std::endl;
                 fileArray[index]->initFile(getChannel(i)->nodeId,basepath);
                 if (hasAcquired)
                     infoArray[index]->start_time = (*timestamps)[getChannel(i)->sourceNodeId]; //the timestamps of the first channel
@@ -215,6 +225,7 @@ void HDF5Recording::startAcquisition()
     eventFile->addEventType("TTL",HDF5FileBase::U8,"event_channels");
     eventFile->addEventType("Messages",HDF5FileBase::STR,"Text");
     spikesFile = new KWXFile();
+	registeredLfpProcessor = false;
 }
 
 RecordEngineManager* HDF5Recording::getEngineManager()

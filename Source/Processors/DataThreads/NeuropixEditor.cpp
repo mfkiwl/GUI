@@ -67,7 +67,7 @@ NeuropixEditor::NeuropixEditor(GenericProcessor* parentNode, NeuropixThread* t, 
 	recordButton->setBounds(20, 100, 34, 22);
 	recordButton->addListener(this);
 	recordButton->setTooltip("Switch between external and internal triggering");
-	recordButton->setToggleState(true, dontSendNotification);
+	recordButton->setToggleState(false, dontSendNotification);
 	addAndMakeVisible(recordButton);
 
 	recordToNpx = true;
@@ -455,7 +455,7 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
     addAndMakeVisible(apGainComboBox);
     addAndMakeVisible(referenceComboBox);
     addAndMakeVisible(filterComboBox);
-	addAndMakeVisible(activityViewComboBox);
+	//addAndMakeVisible(activityViewComboBox);
 
     addAndMakeVisible(enableButton);
     addAndMakeVisible(selectAllButton);
@@ -467,7 +467,7 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
     addAndMakeVisible(referenceViewButton);
     addAndMakeVisible(annotationButton);
 	addAndMakeVisible(calibrationButton);
-	addAndMakeVisible(activityViewButton);
+	//addAndMakeVisible(activityViewButton);
 
 	
 	infoLabel = new Label("INFO", "INFO");
@@ -498,7 +498,7 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
 	activityViewLabel->setFont(Font("Small Text", 13, Font::plain));
 	activityViewLabel->setBounds(545, 325, 100, 20);
 	activityViewLabel->setColour(Label::textColourId, Colours::grey);
-	addAndMakeVisible(activityViewLabel);
+	//addAndMakeVisible(activityViewLabel);
 
     filterLabel = new Label("FILTER", "FILTER CUT (GLOBAL)");
     filterLabel->setFont(Font("Small Text", 13, Font::plain));
@@ -551,7 +551,7 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
 	resetParameters();
 	updateInfoString();
 
-	inputBuffer = thread->getDataBufferAddress();
+	//inputBuffer = thread->getDataBufferAddress();
 	displayBuffer.setSize(768, 10000);
 
 }
@@ -1771,10 +1771,10 @@ void NeuropixInterface::timerCallback()
 	}
 
 	// NOT WORKING:
-	{
-		ScopedLock(*thread->getMutex());
-		int numSamples2 = inputBuffer->readAllFromBuffer(displayBuffer, &timestamp, &eventCode, 10000);
-	}
+	//{
+	//	ScopedLock(*thread->getMutex());
+	//	int numSamples2 = inputBuffer->readAllFromBuffer(displayBuffer, &timestamp, &eventCode, 10000);
+	//}
 	//
 
 	repaint();

@@ -40,7 +40,7 @@ public:
     void addChannel(int index, Channel* chan);
     void addSpikeElectrode(int index, SpikeRecordInfo* elec);
     void writeSpike(const SpikeObject& spike, int electrodeIndex);
-    void registerProcessor(GenericProcessor* processor);
+    void registerProcessor(float sampleRate);
     void resetChannels();
     //oid updateTimeStamp(int64 timestamp);
     void startAcquisition();
@@ -62,6 +62,8 @@ private:
     int16* intBuffer;
 
     bool hasAcquired;
+
+	bool registeredLfpProcessor;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HDF5Recording);
 };

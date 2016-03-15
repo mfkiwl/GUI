@@ -25,7 +25,7 @@
 #include "../SourceNode/SourceNode.h"
 
 
-DataThread::DataThread(SourceNode* s) : Thread("Data Thread"), dataBuffer(0)
+DataThread::DataThread(SourceNode* s) : Thread("Data Thread"), dataBuffer(0), dataBuffer2(0)
 {
     sn = s;
     setPriority(10);
@@ -61,12 +61,15 @@ void DataThread::run()
     }
 }
 
-DataBuffer* DataThread::getBufferAddress()
+DataBuffer* DataThread::getBufferAddress(int bufferNumber)
 {
 
-    std::cout << "Setting buffer address to " << dataBuffer << std::endl;
+   // std::cout << "Setting buffer address to " << dataBuffer << std::endl;
 
-    return dataBuffer;
+	if (bufferNumber == 0)
+		return dataBuffer;
+	else
+		return dataBuffer2;
 }
 
 void DataThread::getChannelInfo(Array<ChannelCustomInfo>& infoArray)

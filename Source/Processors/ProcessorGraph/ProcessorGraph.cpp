@@ -459,7 +459,7 @@ void ProcessorGraph::connectProcessorToAudioAndRecordNodes(GenericProcessor* sou
     if (source == nullptr)
         return;
 
-    getRecordNode()->registerProcessor(source);
+    getRecordNode()->registerProcessor(source->getSampleRate());
 
     for (int chan = 0; chan < source->getNumOutputs(); chan++)
     {

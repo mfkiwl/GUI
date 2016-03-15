@@ -480,6 +480,9 @@ public:
     /** Used to get the number of samples in a given buffer, for a given source node. */
     void setNumSamples(MidiBuffer&, int numSamples);
 
+	/** Used to get the number of samples in a given buffer, for a given source node (manually set nodeId). */
+	void setNumSamplesForNodeId(MidiBuffer&, int numSamples, uint8 id);
+
     /** Used to get the timestamp for a given buffer, for a given channel. */
     int64 getTimestamp(int channelNumber);
 

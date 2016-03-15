@@ -64,7 +64,7 @@ public:
     void run();
 
     /** Returns the address of the DataBuffer that the input source will fill.*/
-    DataBuffer* getBufferAddress();
+    DataBuffer* getBufferAddress(int bufferNumber);
 
     /** Fills the DataBuffer with incoming data. This is the most important
     method for each DataThread.*/
@@ -76,7 +76,7 @@ public:
     /** Experimental method used for testing data sources that can deliver outputs.*/
 	virtual void setOutputLow();
 
-    ScopedPointer<DataBuffer> dataBuffer;
+    ScopedPointer<DataBuffer> dataBuffer, dataBuffer2;
 
     /** Returns true if the data source is connected, false otherwise.*/
     virtual bool foundInputSource() = 0;
@@ -121,7 +121,7 @@ public:
 	virtual bool usesCustomNames();
 
     /** Changes the names of channels, if the thread needs custom names. */
-    void updateChannels();
+    virtual void updateChannels();
 
     /** Returns a pointer to the data input device, in case other processors
     need to communicate with it.*/
@@ -129,10 +129,10 @@ public:
 
     void getChannelInfo(Array<ChannelCustomInfo>& infoArray);
 
+	SourceNode* sn;
+
 protected:
 	virtual void setDefaultChannelNames();
-
-    SourceNode* sn;
 
     uint64 eventCode;
     int64 timestamp;

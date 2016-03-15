@@ -574,6 +574,34 @@ void GenericProcessor::setNumSamples(MidiBuffer& events, int sampleIndex)
                     0); // sample index
 }
 
+/** Used to get the number of samples in a given buffer, for a given source node. */
+void GenericProcessor::setNumSamplesForNodeId(MidiBuffer& events, int sampleIndex, uint8 id)
+{
+
+	// This amounts to adding a "buffer size" flag at a particular sample number,
+	// and a new flag is added each time "setNumSamples" is called.
+	// Thus, if the number of samples changes somewhere in the processing pipeline,
+	// the old sample number will remain. This is a problem if the number of
+	// samples gets smaller.
+	// If we allow the sample rate to change (e.g., with a resampling node),
+	// this code will have to be updated. The easiest approach will be for each
+	// processor to ignore any buffer size events that don't come from its
+	// immediate source.
+	//
+
+	uint8 data[4];
+
+	int16 si = (int16)sampleIndex;
+
+	data[0] = BUFFER_SIZE;  // most-significant byte
+	data[1] = id;       // least-significant byte
+	memcpy(data + 2, &si, 2);
+
+	events.addEvent(data,       // spike data
+		4,          // total bytes
+		0); // sample index
+}
+
 /** Used to get the timestamp for a given buffer, for a given source node. */
 int64 GenericProcessor::getTimestamp(int channelNum)
 {

@@ -37,7 +37,7 @@
 SourceNode::SourceNode(const String& name_)
     : GenericProcessor(name_),
       sourceCheckInterval(2000), wasDisabled(true), dataThread(0),
-      inputBuffer(0), ttlState(0)
+	  spikeBuffer(0), lfpBuffer(0), ttlState(0), isMultiSampleRate(false)
 {
 
     std::cout << "creating source node." << std::endl;
@@ -56,6 +56,7 @@ SourceNode::SourceNode(const String& name_)
     } else if (getName().equalsIgnoreCase("Neuropix"))
     {
         dataThread = new NeuropixThread(this);
+		isMultiSampleRate = true;
     }
 #if ECUBE_COMPILE
     else if (getName().equalsIgnoreCase("eCube"))
@@ -130,11 +131,14 @@ void SourceNode::getEventChannelNames(StringArray& names)
 
 void SourceNode::updateSettings()
 {
-    if (inputBuffer == 0 && dataThread != 0)
+    if (spikeBuffer == 0 && dataThread != 0)
     {
 
-        inputBuffer = dataThread->getBufferAddress();
-        std::cout << "Input buffer address is " << inputBuffer << std::endl;
+        spikeBuffer = dataThread->getBufferAddress(0);
+
+		if (isMultiSampleRate)
+			lfpBuffer = dataThread->getBufferAddress(1);
+        //std::cout << "Input buffer address is " << inputBuffer << std::endl;
     }
 
     dataThread->updateChannels();
@@ -383,10 +387,16 @@ void SourceNode::process(AudioSampleBuffer& buffer,
     events.clear();
     buffer.clear();
 
-    int nSamples = inputBuffer->readAllFromBuffer(buffer, &timestamp, eventCodeBuffer, buffer.getNumSamples());
+    int nSamples = spikeBuffer->readAllFromBuffer(buffer, &timestamp, eventCodeBuffer, buffer.getNumSamples());
 
     setNumSamples(events, nSamples);
     setTimestamp(events, timestamp);
+
+	if (isMultiSampleRate)
+	{
+		int nSamples2 = lfpBuffer->readAllFromBuffer(buffer, &timestamp, eventCodeBuffer, buffer.getNumSamples(), 384);
+		setNumSamplesForNodeId(events, nSamples2, 99);
+	}
 
     //std::cout << *buffer.getReadPointer(0) << std::endl;
 

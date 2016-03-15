@@ -104,7 +104,7 @@ public:
 
     /** Called when acquisition starts once for each processor that might record continuous data
     */
-    virtual void registerProcessor(GenericProcessor* processor);
+    virtual void registerProcessor(float sampleRate);
 
     /** Called after registerProcessor, once for each output
     	channel of the processor

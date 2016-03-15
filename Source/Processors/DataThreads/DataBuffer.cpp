@@ -76,7 +76,7 @@ int DataBuffer::getNumSamples()
 }
 
 
-int DataBuffer::readAllFromBuffer(AudioSampleBuffer& data, uint64* timestamp, uint64* eventCodes, int maxSize, bool getLock)
+int DataBuffer::readAllFromBuffer(AudioSampleBuffer& data, uint64* timestamp, uint64* eventCodes, int maxSize, int startChan)
 {
     // check to see if the maximum size is smaller than the total number of available ints
     // Better version (1/27/14)?
@@ -93,9 +93,9 @@ int DataBuffer::readAllFromBuffer(AudioSampleBuffer& data, uint64* timestamp, ui
     if (blockSize1 > 0)
     {
 
-        for (int chan = 0; chan < data.getNumChannels(); chan++)
+        for (int chan = 0; chan < buffer.getNumChannels(); chan++)
         {
-            data.copyFrom(chan, // destChan
+            data.copyFrom(chan + startChan, // destChan
                           0,    // destStartSample
                           buffer, // source
                           chan,  // sourceChannel
@@ -114,9 +114,9 @@ int DataBuffer::readAllFromBuffer(AudioSampleBuffer& data, uint64* timestamp, ui
     if (blockSize2 > 0)
     {
 
-        for (int chan = 0; chan < data.getNumChannels(); chan++)
+		for (int chan = 0; chan < buffer.getNumChannels(); chan++)
         {
-            data.copyFrom(chan, // destChan
+            data.copyFrom(chan + startChan, // destChan
                           blockSize1,    // destStartSample
                           buffer, // source
                           chan,  // sourceChannel

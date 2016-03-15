@@ -464,9 +464,9 @@ void RecordNode::process(AudioSampleBuffer& buffer,
 
 }
 
-void RecordNode::registerProcessor(GenericProcessor* sourceNode)
+void RecordNode::registerProcessor(float sampleRate)
 {
-    EVERY_ENGINE->registerProcessor(sourceNode);
+    EVERY_ENGINE->registerProcessor(sampleRate);
 }
 
 Channel* RecordNode::getDataChannel(int index)

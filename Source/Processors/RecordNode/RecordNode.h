@@ -76,7 +76,7 @@ public:
 
     /** Called by the processor graph for each processor that could record data
     */
-    void registerProcessor(GenericProcessor* sourceNode);
+    void registerProcessor(float sampleRate);
     /** Called by the processor graph for each recordable channel
     */
     void addInputChannel(GenericProcessor* sourceNode, int chan);

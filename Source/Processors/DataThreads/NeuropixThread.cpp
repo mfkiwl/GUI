@@ -23,11 +23,13 @@
 
 #include "NeuropixThread.h"
 
+#include "../SourceNode/SourceNode.h"
+
 NeuropixThread::NeuropixThread(SourceNode* sn) : DataThread(sn), baseStationAvailable(false)
 {
 
-	dataBuffer = new DataBuffer(768, 10000); // start with 768 channels and automatically resize
-	displayBuffer = new DataBuffer(768, 10000);
+	dataBuffer = new DataBuffer(384, 10000); // start with 768 channels and automatically resize
+	dataBuffer2 = new DataBuffer(384, 10000); // start with 768 channels and automatically resize
 
 	// channel selections:
 	// Options 1 & 2 -- fixed 384 channels
@@ -77,7 +79,7 @@ void NeuropixThread::openConnection()
 
 	baseStationAvailable = true;
 	internalTrigger = true;
-	recordToNpx = true;
+	recordToNpx = false;
 	recordingNumber = 0;
 
 	// // GET SYSTEM INFO:
@@ -132,10 +134,6 @@ int NeuropixThread::getProbeOption()
 	return option + 1;
 }
 
-DataBuffer* NeuropixThread::getDataBufferAddress()
-{
-	return displayBuffer;
-}
 
 /** Initializes data transfer.*/
 bool NeuropixThread::startAcquisition()
@@ -143,7 +141,7 @@ bool NeuropixThread::startAcquisition()
 
 	// clear the internal buffer
 	dataBuffer->clear();
-	displayBuffer->clear();
+	dataBuffer2->clear();
 
 	// stop data stream
 	DigitalControlErrorCode err3 = neuropix.neuropix_nrst(false);
@@ -228,6 +226,20 @@ bool NeuropixThread::stopAcquisition()
 	return true;
 }
 
+void NeuropixThread::updateChannels()
+{
+	for (int i = getNumHeadstageOutputs() / 2; i < getNumHeadstageOutputs(); i++)
+	{
+		//Channel* ch = new Channel(this, i + 1, HEADSTAGE_CHANNEL);
+		//ch->setProcessor(this);
+		sn->channels[i]->sampleRate = 2500.0;
+		sn->channels[i]->sourceNodeId = 99;
+		sn->channels[i]->nodeId = 99;
+	}
+
+
+}
+
 /** Returns the number of continuous headstage channels the data source can provide.*/
 int NeuropixThread::getNumHeadstageOutputs()
 {
@@ -239,12 +251,10 @@ int NeuropixThread::getNumHeadstageOutputs()
 			totalChans++;
 	}
 
-	totalChans *= 2; // account for LFP channels
-
 	dataBuffer->resize(totalChans, 10000);
-	displayBuffer->resize(totalChans, 10000);
+	dataBuffer2->resize(totalChans, 10000);
 
-	return totalChans;
+	return totalChans * 2; // account for LFP channels
 }
 
 /** Returns the number of continuous aux channels the data source can provide.*/
@@ -366,7 +376,8 @@ bool NeuropixThread::updateBuffer()
 
 	if (rec == READ_SUCCESS)
 	{
-		float data[768];
+		float data[384];
+		float data2[384];
 
 		//if (counter <= 0)
 		//{
@@ -386,13 +397,17 @@ bool NeuropixThread::updateBuffer()
 
 			for (int j = 0; j < 384; j++)
 			{
-				data[j] = (packet.apData[i][j] - 0.6) / gains[apGains[j]] * 1000000.0f; // convert to microvolts
-				data[j+384] = (packet.lfpData[i] - 0.6) / gains[lfpGains[j]] * 1000000.0f; // convert to microvolts
+				data[j] = (packet.apData[i][j] - 0.6) / gains[apGains[j]] * -1000000.0f; // convert to microvolts
+
+				if (i == 0)
+					data2[j] = (packet.lfpData[j] - 0.6) / gains[lfpGains[j]] * -1000000.0f; // convert to microvolts
 			}
 
 			dataBuffer->addToBuffer(data, &timestamp, &eventCode, 1);
 			timestamp += 1;
 		}
+
+		dataBuffer2->addToBuffer(data2, &timestamp, &eventCode, 1);
 
 		//std::cout << "READ SUCCESS!" << std::endl;	
 		

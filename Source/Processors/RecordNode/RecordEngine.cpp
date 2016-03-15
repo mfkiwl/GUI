@@ -41,7 +41,7 @@ void RecordEngine::setParameter(EngineParameter& parameter) {}
 
 void RecordEngine::resetChannels() {}
 
-void RecordEngine::registerProcessor(GenericProcessor* processor) {}
+void RecordEngine::registerProcessor(float sampleRate) {}
 
 Channel* RecordEngine::getChannel(int index)
 {
@@ -259,10 +259,10 @@ RecordEngineManager* RecordEngineManager::createBuiltInEngineManager(int index)
     switch (index)
     {
         case 0:
-            return OriginalRecording::getEngineManager();
+			return HDF5Recording::getEngineManager();
             break;
         case 1:
-            return HDF5Recording::getEngineManager();
+            return OriginalRecording::getEngineManager();
             break;
         default:
             return nullptr;

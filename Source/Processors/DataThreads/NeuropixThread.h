@@ -54,6 +54,8 @@ public:
 
     bool updateBuffer();
 
+	void updateChannels();
+
     /** Returns true if the data source is connected, false otherwise.*/
     bool foundInputSource();
 
@@ -120,9 +122,6 @@ public:
 	/** Starts data acquisition after a certain time.*/
 	void timerCallback();
 
-	/** Returns a pointer to a data buffer */
-	DataBuffer* getDataBufferAddress();
-
 	CriticalSection* getMutex()
 	{
 		return &displayMutex;
@@ -156,8 +155,6 @@ private:
 
 	void openConnection();
 	void closeConnection();
-
-	ScopedPointer<DataBuffer> displayBuffer;
 
 	int64 timestamp;
 	uint64 eventCode;

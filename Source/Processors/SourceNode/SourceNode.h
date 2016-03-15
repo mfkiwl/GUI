@@ -115,7 +115,10 @@ private:
     void timerCallback();
 
     ScopedPointer<DataThread> dataThread;
-    DataBuffer* inputBuffer;
+    DataBuffer* spikeBuffer;
+	DataBuffer* lfpBuffer;
+
+	bool isMultiSampleRate;
 
     uint64 timestamp;
     //uint64* eventCodeBuffer;
