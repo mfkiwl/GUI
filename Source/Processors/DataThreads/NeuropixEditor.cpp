@@ -62,7 +62,7 @@ NeuropixEditor::NeuropixEditor(GenericProcessor* parentNode, NeuropixThread* t, 
     triggerTypeLabel->setColour(Label::textColourId, Colours::darkgrey);
     addAndMakeVisible(triggerTypeLabel);
 
-	recordButton = new UtilityButton("YES", Font("Small Text", 13, Font::plain));
+	recordButton = new UtilityButton("NO", Font("Small Text", 13, Font::plain));
 	recordButton->setRadius(3.0f);
 	recordButton->setBounds(20, 100, 34, 22);
 	recordButton->addListener(this);
@@ -71,6 +71,26 @@ NeuropixEditor::NeuropixEditor(GenericProcessor* parentNode, NeuropixThread* t, 
 	addAndMakeVisible(recordButton);
 
 	recordToNpx = true;
+
+	lfpButton = new UtilityButton("LFP", Font("Small Text", 13, Font::plain));
+	lfpButton->setRadius(3.0f);
+	lfpButton->setBounds(20, 35, 34, 22);
+	lfpButton->addListener(this);
+	lfpButton->setTooltip("Toggle LFP data output");
+	lfpButton->setToggleState(true, dontSendNotification);
+	//   addAndMakeVisible(lfpButton);
+
+	sendLfp = true;
+
+	apButton = new UtilityButton("AP", Font("Small Text", 13, Font::plain));
+	apButton->setRadius(3.0f);
+	apButton->setBounds(65, 35, 34, 22);
+	apButton->addListener(this);
+	apButton->setTooltip("Toggle AP data output");
+	apButton->setToggleState(true, dontSendNotification);
+	//addAndMakeVisible(apButton);
+
+	sendAp = true;
 
 	recordLabel = new Label("Record to NPX", "Record to NPX");
 	recordLabel->setFont(Font("Small Text", 13, Font::plain));
@@ -136,6 +156,18 @@ void NeuropixEditor::buttonCallback(Button* button)
 			}
 
 			thread->setRecordMode(recordToNpx);
+		} 
+		else if (button == apButton)
+		{
+			sendAp = !sendAp;
+			apButton->setToggleState(sendAp, dontSendNotification);
+			thread->toggleApData(sendAp);
+		}
+		else if (button == lfpButton)
+		{
+			sendLfp = !sendLfp;
+			lfpButton->setToggleState(sendLfp, dontSendNotification);
+			thread->toggleLfpData(sendLfp);
 		}
 	}
 	else {
@@ -361,14 +393,14 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
 		apGainComboBox->addItem(String(gains[i]) + String("x"), i + 1);
 	}
 
-	lfpGainComboBox->setSelectedId(1);
-	apGainComboBox->setSelectedId(1);
+	lfpGainComboBox->setSelectedId(4, dontSendNotification);
+	apGainComboBox->setSelectedId(4, dontSendNotification);
 
 	referenceComboBox = new ComboBox("ReferenceComboBox");
 	referenceComboBox->setBounds(400, 250, 65, 22);
 	referenceComboBox->addListener(this);
 	referenceComboBox->addItem("Ext", 1);
-	referenceComboBox->setSelectedId(1);
+	referenceComboBox->setSelectedId(1, dontSendNotification);
 
 	filterComboBox = new ComboBox("FilterComboBox");
 	filterComboBox->setBounds(400, 300, 75, 22);
@@ -376,14 +408,14 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
 	filterComboBox->addItem("300 Hz", 1);
 	filterComboBox->addItem("500 Hz", 2);
 	filterComboBox->addItem("1 kHz", 4);
-	filterComboBox->setSelectedId(1);
+	filterComboBox->setSelectedId(1, dontSendNotification);
 
 	activityViewComboBox = new ComboBox("ActivityViewComboBox");
 	activityViewComboBox->setBounds(550, 350, 75, 22);
 	activityViewComboBox->addListener(this);
 	activityViewComboBox->addItem("Spikes", 1);
 	activityViewComboBox->addItem("LFP", 2);
-	activityViewComboBox->setSelectedId(1);
+	activityViewComboBox->setSelectedId(1, dontSendNotification);
 
 	enableButton = new UtilityButton("ENABLE", Font("Small Text", 13, Font::plain));
     enableButton->setRadius(3.0f);
@@ -548,7 +580,7 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
 
 	wasReset = false;
 
-	resetParameters();
+	//resetParameters();
 	updateInfoString();
 
 	//inputBuffer = thread->getDataBufferAddress();
@@ -759,7 +791,7 @@ void NeuropixInterface::buttonClicked(Button* button)
 	{
 		if (!editor->acquisitionIsActive)
 		{
-
+			int maxChan = 0;
 
 			for (int i = 0; i < 966; i++)
 			{
@@ -774,7 +806,8 @@ void NeuropixInterface::buttonClicked(Button* button)
 							channelStatus.set(i, -2); // turn channel on
 
 						// 4. enable electrode
-						thread->selectElectrode(getChannelForElectrode(i), getConnectionForChannel(i));
+						thread->selectElectrode(getChannelForElectrode(i), getConnectionForChannel(i), false);
+						maxChan = i;
 
 						int startPoint;
 						int jump;
@@ -812,6 +845,8 @@ void NeuropixInterface::buttonClicked(Button* button)
 					}
 				}
 			}
+
+			thread->selectElectrode(getChannelForElectrode(maxChan), getConnectionForChannel(maxChan), true);
 
 			updateAvailableRefs();
 
@@ -871,9 +906,9 @@ void NeuropixInterface::buttonClicked(Button* button)
 	{
 		if (!editor->acquisitionIsActive)
 		{
-			std::cout << "Loading gain setting..." << std::endl;
-			thread->loadGainSettings();
-			std::cout << "Gain settings loaded." << std::endl;
+			std::cout << "Calibrating probe..." << std::endl;
+			thread->calibrateProbe();
+			std::cout << "Calibration settings loaded." << std::endl;
 		}
 	}
 	

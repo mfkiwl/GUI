@@ -87,7 +87,7 @@ public:
 	int getNumEventChannels();
 
 	/** Selects which electrode is connected to each channel. */
-	void selectElectrode(int chNum, int connection);
+	void selectElectrode(int chNum, int connection, bool transmit);
 
 	/** Selects which reference is used for each channel. */
 	void setReference(int chNum, int refSetting);
@@ -113,14 +113,20 @@ public:
 	/** Toggles between saving to NPX file. */
 	void setRecordMode(bool record);
 
-	/** Loads gain calibration settings stored on EEPROM. */
-	void loadGainSettings();
+	/** Loads calibration settings stored on EEPROM. */
+	void calibrateProbe();
 
 	/** Retrieve probe option. */
 	int getProbeOption();
 
 	/** Starts data acquisition after a certain time.*/
 	void timerCallback();
+
+	/** Turns AP data output on and off.*/
+	void toggleApData(bool send);
+
+	/** Turns LFP data output on and off.*/
+	void toggleLfpData(bool send);
 
 	CriticalSection* getMutex()
 	{
@@ -133,6 +139,8 @@ private:
     bool baseStationAvailable;
     bool internalTrigger;
 	bool recordToNpx;
+	bool sendAp;
+	bool sendLfp;
 
 	Neuropix_basestation_api neuropix;
 	

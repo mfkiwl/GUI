@@ -59,6 +59,9 @@ public:
 
 private:
 
+	ScopedPointer<UtilityButton> apButton;
+	ScopedPointer<UtilityButton> lfpButton;
+
     ScopedPointer<ComboBox> optionComboBox;
     ScopedPointer<UtilityButton> triggerTypeButton;
     ScopedPointer<Label> triggerTypeLabel;
@@ -70,6 +73,8 @@ private:
 
     bool internalTrigger;
 	bool recordToNpx;
+	bool sendAp;
+	bool sendLfp;
 	int option;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NeuropixEditor);
@@ -132,7 +137,6 @@ public:
     void buttonClicked(Button*);
     void comboBoxChanged(ComboBox*);
     void labelTextChanged(Label* l);
-
 
 	void saveParameters(XmlElement* xml);
 	void loadParameters(XmlElement* xml);

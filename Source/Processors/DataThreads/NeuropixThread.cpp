@@ -79,6 +79,8 @@ void NeuropixThread::openConnection()
 
 	baseStationAvailable = true;
 	internalTrigger = true;
+	sendLfp = true;
+	sendAp = true;
 	recordToNpx = false;
 	recordingNumber = 0;
 
@@ -103,6 +105,10 @@ void NeuropixThread::openConnection()
 	std::cout << "nrst 1 error code: " << err3 << std::endl;
 	ErrorCode err4 = neuropix.neuropix_resetDatapath();
 	std::cout << "reset datapath error code: " << err4 << std::endl;
+
+	// set default parameters
+	setAllApGains(3);
+	setAllLfpGains(3);
 }
 
 void NeuropixThread::closeConnection()
@@ -228,16 +234,27 @@ bool NeuropixThread::stopAcquisition()
 
 void NeuropixThread::updateChannels()
 {
-	for (int i = getNumHeadstageOutputs() / 2; i < getNumHeadstageOutputs(); i++)
+	if (sendLfp)
 	{
-		//Channel* ch = new Channel(this, i + 1, HEADSTAGE_CHANNEL);
-		//ch->setProcessor(this);
-		sn->channels[i]->sampleRate = 2500.0;
-		sn->channels[i]->sourceNodeId = 99;
-		sn->channels[i]->nodeId = 99;
+		for (int i = getNumHeadstageOutputs() / 2; i < getNumHeadstageOutputs(); i++)
+		{
+			//Channel* ch = new Channel(this, i + 1, HEADSTAGE_CHANNEL);
+			//ch->setProcessor(this);
+			sn->channels[i]->sampleRate = 2500.0;
+			sn->channels[i]->sourceNodeId = 99;
+			sn->channels[i]->nodeId = 99;
+		}
 	}
+}
 
+void NeuropixThread::toggleApData(bool state)
+{
+	 sendAp = state;
+}
 
+void NeuropixThread::toggleLfpData(bool state)
+{
+	 sendLfp = state;
 }
 
 /** Returns the number of continuous headstage channels the data source can provide.*/
@@ -254,7 +271,10 @@ int NeuropixThread::getNumHeadstageOutputs()
 	dataBuffer->resize(totalChans, 10000);
 	dataBuffer2->resize(totalChans, 10000);
 
-	return totalChans * 2; // account for LFP channels
+	if (sendAp && sendLfp)
+		totalChans *= 2; // account for LFP channels
+
+	return totalChans; 
 }
 
 /** Returns the number of continuous aux channels the data source can provide.*/
@@ -287,9 +307,9 @@ int NeuropixThread::getNumEventChannels()
 	return 16;
 }
 
-void NeuropixThread::selectElectrode(int chNum, int connection)
+void NeuropixThread::selectElectrode(int chNum, int connection, bool transmit)
 {
-	ShankConfigErrorCode scec = neuropix.neuropix_selectElectrode(chNum, connection);
+	ShankConfigErrorCode scec = neuropix.neuropix_selectElectrode(chNum, connection, transmit);
 
 	std::cout << "Connecting input " << chNum << " to channel " << connection << "; error code = " << scec << std::endl;
 
@@ -359,12 +379,12 @@ void NeuropixThread::setRecordMode(bool record)
 }
 
 
-void NeuropixThread::loadGainSettings()
+void NeuropixThread::calibrateProbe()
 {
 
-	EepromErrorCode eec = neuropix.neuropix_readGainCorrection();
+	neuropix.neuropix_readADCCalibration();
+	neuropix.neuropix_readGainCorrection();
 
-	std::cout << "Gain correction error code: " << eec << std::endl;
 }
 
 bool NeuropixThread::updateBuffer()
@@ -399,7 +419,7 @@ bool NeuropixThread::updateBuffer()
 			{
 				data[j] = (packet.apData[i][j] - 0.6) / gains[apGains[j]] * -1000000.0f; // convert to microvolts
 
-				if (i == 0)
+				if (i == 0 && sendLfp)
 					data2[j] = (packet.lfpData[j] - 0.6) / gains[lfpGains[j]] * -1000000.0f; // convert to microvolts
 			}
 
@@ -407,7 +427,8 @@ bool NeuropixThread::updateBuffer()
 			timestamp += 1;
 		}
 
-		dataBuffer2->addToBuffer(data2, &timestamp, &eventCode, 1);
+		if (sendLfp)
+			dataBuffer2->addToBuffer(data2, &timestamp, &eventCode, 1);
 
 		//std::cout << "READ SUCCESS!" << std::endl;	
 		
