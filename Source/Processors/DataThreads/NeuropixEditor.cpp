@@ -570,7 +570,7 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
     shankPath.lineTo(27+10, 28);
     shankPath.closeSubPath();
 
-   	setOption(1);
+   	//setOption(1);
 
    	colorSelector = new ColorSelector(this);
    	colorSelector->setBounds(400, 450, 250, 20);
@@ -701,15 +701,24 @@ void NeuropixInterface::comboBoxChanged(ComboBox* comboBox)
 		}
 		else if (comboBox == referenceComboBox)
 		{
-			int refSetting = comboBox->getSelectedId() - 1;
+			String refSetting = comboBox->getText();
+			int refChannel;
 
-			thread->setAllReferences(refSetting);
+			if (refSetting.equalsIgnoreCase("Ext"))
+			{
+				refChannel = 0;
+			}
+			else {
+				refChannel = refSetting.getIntValue();
+			}
+
+			thread->setAllReferences(getChannelForElectrode(refChannel), getConnectionForChannel(refChannel));
 
 			for (int i = 0; i < 966; i++)
 			{
 			//	if (channelSelectionState[i] == 1)
 			//	{
-					channelReference.set(i, refSetting);
+				channelReference.set(i, comboBox->getSelectedId()-1);
 
 			//		// 3. set reference for individual channels
 			//		// inform the thread of the new settings
@@ -1007,17 +1016,40 @@ void NeuropixInterface::setOption(int o)
 
 void NeuropixInterface::updateAvailableRefs()
 {
+
+	String currentRef = referenceComboBox->getText();
+	std::cout << "Updating refs, Current reference = " << currentRef << std::endl;
+
 	referenceComboBox->clear(NotificationType::dontSendNotification);
 
 	referenceComboBox->addItem("Ext", 1);
 
+	int newIndex = 1;
+	bool foundMatch = false;
+
 	for (int i = 0; i < refs.size(); i++)
 	{
-		if (channelStatus[refs[i]-1] == -2)
-			referenceComboBox->addItem(String(refs[i]),i+2);
+		if (channelStatus[refs[i] - 1] == -2)
+		{
+			String newString = String(refs[i]);
+
+			if (newString.equalsIgnoreCase(currentRef))
+			{
+				newIndex = i + 2;
+				foundMatch = true;
+			}
+				
+
+			referenceComboBox->addItem(newString, i + 2);
+		}
+			
 	}
 
-	referenceComboBox->setSelectedId(1);
+	referenceComboBox->setSelectedId(newIndex, dontSendNotification);
+
+	if (!foundMatch && !currentRef.equalsIgnoreCase("Ext")) // reset to Ext reference
+		thread->setAllReferences(0, 0);
+
 }
 
 void NeuropixInterface::mouseMove(const MouseEvent& event)
@@ -1150,7 +1182,7 @@ String NeuropixInterface::getChannelInfoString(int chan)
 	a += String(lfpGainComboBox->getItemText(channelLfpGain[chan]));
 
 	a += "\nReference: ";
-	a += String(referenceComboBox->getItemText(channelReference[chan]));
+	a += String(channelReference[chan]);
 
 	return a;
 }

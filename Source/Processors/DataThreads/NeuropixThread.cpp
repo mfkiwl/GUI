@@ -53,6 +53,18 @@ NeuropixThread::NeuropixThread(SourceNode* sn) : DataThread(sn), baseStationAvai
 	gains.add(2000);
 	gains.add(2500);
 
+	refs.add(0);
+	refs.add(37);
+	refs.add(76);
+	refs.add(113);
+	refs.add(152);
+	refs.add(189);
+	refs.add(228);
+	refs.add(265);
+	refs.add(304);
+	refs.add(341);
+	refs.add(380);
+
 	openConnection();
 
 }
@@ -109,6 +121,7 @@ void NeuropixThread::openConnection()
 	// set default parameters
 	setAllApGains(3);
 	setAllLfpGains(3);
+	setAllReferences(0, 0);
 }
 
 void NeuropixThread::closeConnection()
@@ -135,7 +148,12 @@ int NeuropixThread::getProbeOption()
 	//option = asicId.probeType;
 	//asicId.probeType = option - 1;
 	//neuropix.neuropix_writeId(asicId);
-	uint8 option = neuropix.neuropix_getOption();
+	option = neuropix.neuropix_getOption();
+
+	if (option < 3)
+		numRefs = 10;
+	else
+		numRefs = 7;
 
 	return option + 1;
 }
@@ -317,14 +335,47 @@ void NeuropixThread::selectElectrode(int chNum, int connection, bool transmit)
 
 void NeuropixThread::setReference(int chNum, int refSetting)
 {
+
 	BaseConfigErrorCode bcec = neuropix.neuropix_setReference(chNum, refSetting);
 
 	std::cout << "Set channel " << chNum << " reference to " << refSetting << "; error code = " << bcec << std::endl;
 }
 
-void NeuropixThread::setAllReferences(int refSetting)
+void NeuropixThread::setAllReferences(int refChan, int bankForReference)
 {
-	BaseConfigErrorCode bcec = neuropix.neuropix_writeAllReferences((unsigned char) refSetting);
+	
+	// Option 1-3, numRefs = 10
+	// Option 4, numRefs = 7
+	int refSetting = refs.indexOf(refChan);
+
+	if (false)
+	{
+		if (option > 2) // ensure unused references are disconnected:
+		{
+			for (int i = 0; i < numRefs; i++)
+			{
+				if (i == refSetting)
+				{
+					if (i == 0)
+						neuropix.neuropix_setExtRef(true, false);
+					else
+						neuropix.neuropix_selectElectrode(refChan, bankForReference, false);
+				}
+
+				else
+				{
+					if (i == 0)
+						neuropix.neuropix_setExtRef(false, false);
+					else
+						neuropix.neuropix_selectElectrode(refChan, 0xFF, false);
+				}
+
+			}
+		}
+	}
+	
+	// update reference settings for probe:
+	BaseConfigErrorCode bcec = neuropix.neuropix_writeAllReferences((unsigned char)refSetting);
 
 	std::cout << "Set all references to " << refSetting << "; error code = " << bcec << std::endl;
 }

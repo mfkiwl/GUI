@@ -93,7 +93,7 @@ public:
 	void setReference(int chNum, int refSetting);
 
 	/** Selects which reference is used for each channel. */
-	void setAllReferences(int refSetting);
+	void setAllReferences(int refSetting, int bankForReference);
 
 	/** Sets the gain for each channel. */
 	void setGain(int ch, int apGain, int lfpGain);
@@ -160,6 +160,7 @@ private:
 	Array<int> lfpGains;
 	Array<int> channelMap;
 	Array<bool> outputOn;
+	Array<int> refs;
 
 	void openConnection();
 	void closeConnection();
@@ -167,6 +168,9 @@ private:
 	int64 timestamp;
 	uint64 eventCode;
 	int maxCounter;
+
+	uint8 option;
+	int numRefs;
 
 };
 
