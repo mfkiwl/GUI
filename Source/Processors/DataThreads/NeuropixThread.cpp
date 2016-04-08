@@ -119,8 +119,40 @@ void NeuropixThread::openConnection()
 	std::cout << "reset datapath error code: " << err4 << std::endl;
 
 	// set default parameters
+	getProbeOption();
 	setAllApGains(3);
 	setAllLfpGains(3);
+	
+	if (option >= 2)
+	{
+		int totalChans;
+
+		if (option == 2)
+			totalChans = 383;
+		else
+			totalChans = 275;
+
+		for (int i = 0; i < totalChans; i++)
+		{
+			selectElectrode(i, 0, false);
+		}
+		selectElectrode(totalChans, 0, true);
+
+		for (int i = 0; i < 50; i++)
+		{
+			selectElectrode(i, 1, false);
+		}
+		selectElectrode(totalChans, 1, true);
+
+		setAllReferences(37, 1);
+
+		for (int i = 0; i < 50; i++)
+		{
+			selectElectrode(i, 0, false);
+		}
+		selectElectrode(totalChans, 0, true);
+	}
+
 	setAllReferences(0, 0);
 }
 
@@ -327,9 +359,13 @@ int NeuropixThread::getNumEventChannels()
 
 void NeuropixThread::selectElectrode(int chNum, int connection, bool transmit)
 {
-	ShankConfigErrorCode scec = neuropix.neuropix_selectElectrode(chNum, connection, transmit);
 
-	std::cout << "Connecting input " << chNum << " to channel " << connection << "; error code = " << scec << std::endl;
+	if (!refs.contains(chNum))
+		neuropix.neuropix_selectElectrode(chNum, connection, transmit);
+	else
+		neuropix.neuropix_selectElectrode(chNum, 0xFF, transmit);
+
+	//std::cout << "Connecting input " << chNum << " to channel " << connection << "; error code = " << scec << std::endl;
 
 }
 
@@ -348,9 +384,9 @@ void NeuropixThread::setAllReferences(int refChan, int bankForReference)
 	// Option 4, numRefs = 7
 	int refSetting = refs.indexOf(refChan);
 
-	if (false)
+	if (true)
 	{
-		if (option > 2) // ensure unused references are disconnected:
+		if (option >= 2) // ensure unused references are disconnected:
 		{
 			for (int i = 0; i < numRefs; i++)
 			{
