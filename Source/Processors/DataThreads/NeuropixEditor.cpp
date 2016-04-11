@@ -393,7 +393,7 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
 		apGainComboBox->addItem(String(gains[i]) + String("x"), i + 1);
 	}
 
-	lfpGainComboBox->setSelectedId(4, dontSendNotification);
+	lfpGainComboBox->setSelectedId(2, dontSendNotification);
 	apGainComboBox->setSelectedId(4, dontSendNotification);
 
 	referenceComboBox = new ComboBox("ReferenceComboBox");
@@ -627,7 +627,7 @@ void NeuropixInterface::resetParameters()
 		//thread->setAllReferences(0);
 		//thread->setFilter(0);
 
-		lfpGainComboBox->setSelectedId(4, dontSendNotification);
+		lfpGainComboBox->setSelectedId(2, dontSendNotification);
 		apGainComboBox->setSelectedId(4, dontSendNotification);
 		referenceComboBox->setSelectedId(1, dontSendNotification);
 		filterComboBox->setSelectedId(1, dontSendNotification);

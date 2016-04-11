@@ -121,7 +121,7 @@ void NeuropixThread::openConnection()
 	// set default parameters
 	getProbeOption();
 	setAllApGains(3);
-	setAllLfpGains(3);
+	setAllLfpGains(1);
 	
 	if (option >= 2)
 	{
@@ -437,7 +437,7 @@ void NeuropixThread::setAllApGains(int apGain)
 
 void NeuropixThread::setAllLfpGains(int lfpGain)
 {
-	BaseConfigErrorCode bcec = neuropix.neuropix_writeAllAPGains(lfpGain);
+	BaseConfigErrorCode bcec = neuropix.neuropix_writeAllLFPGains(lfpGain);
 
 	std::cout << "Set all LFP gains to " << lfpGain << "; error code = " << bcec << std::endl;
 
