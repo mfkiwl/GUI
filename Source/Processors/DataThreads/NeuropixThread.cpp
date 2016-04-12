@@ -121,36 +121,36 @@ void NeuropixThread::openConnection()
 	// set default parameters
 	getProbeOption();
 	setAllApGains(3);
-	setAllLfpGains(1);
+	setAllLfpGains(2);
 	
 	if (option >= 2)
 	{
 		int totalChans;
 
 		if (option == 2)
-			totalChans = 383;
+			totalChans = 384;
 		else
-			totalChans = 275;
+			totalChans = 276;
 
 		for (int i = 0; i < totalChans; i++)
 		{
 			selectElectrode(i, 0, false);
 		}
-		selectElectrode(totalChans, 0, true);
+		selectElectrode(totalChans - 1, 0, true);
 
-		for (int i = 0; i < 50; i++)
-		{
-			selectElectrode(i, 1, false);
-		}
-		selectElectrode(totalChans, 1, true);
+		//for (int i = 0; i < 50; i++)
+		//{
+		//	selectElectrode(i, 1, false);
+		//}
+		//selectElectrode(totalChans, 1, true);
 
-		setAllReferences(37, 1);
+		//setAllReferences(37, 1);
 
-		for (int i = 0; i < 50; i++)
-		{
-			selectElectrode(i, 0, false);
-		}
-		selectElectrode(totalChans, 0, true);
+		//for (int i = 0; i < 50; i++)
+		//{
+		//	selectElectrode(i, 0, false);
+		//}
+		//selectElectrode(totalChans, 0, true);
 	}
 
 	setAllReferences(0, 0);
@@ -360,7 +360,7 @@ int NeuropixThread::getNumEventChannels()
 void NeuropixThread::selectElectrode(int chNum, int connection, bool transmit)
 {
 
-	if (!refs.contains(chNum))
+	if (!refs.contains(chNum+1))
 		neuropix.neuropix_selectElectrode(chNum, connection, transmit);
 	else
 		neuropix.neuropix_selectElectrode(chNum, 0xFF, transmit);
@@ -388,14 +388,17 @@ void NeuropixThread::setAllReferences(int refChan, int bankForReference)
 	{
 		if (option >= 2) // ensure unused references are disconnected:
 		{
-			for (int i = 0; i < numRefs; i++)
+
+			int i; 
+
+			for (i = 0; i < numRefs - 1; i++)
 			{
 				if (i == refSetting)
 				{
 					if (i == 0)
 						neuropix.neuropix_setExtRef(true, false);
 					else
-						neuropix.neuropix_selectElectrode(refChan, bankForReference, false);
+						neuropix.neuropix_selectElectrode(refChan-1, bankForReference, false);
 				}
 
 				else
@@ -403,10 +406,17 @@ void NeuropixThread::setAllReferences(int refChan, int bankForReference)
 					if (i == 0)
 						neuropix.neuropix_setExtRef(false, false);
 					else
-						neuropix.neuropix_selectElectrode(refChan, 0xFF, false);
+						neuropix.neuropix_selectElectrode(refs[i]-1, 0xFF, false);
 				}
 
 			}
+
+			i = numRefs - 1;
+
+			if (i == refSetting)
+				neuropix.neuropix_selectElectrode(refs[i]-1, bankForReference, true);
+			else
+				neuropix.neuropix_selectElectrode(refs[i]-1, 0xFF, true);
 		}
 	}
 	
