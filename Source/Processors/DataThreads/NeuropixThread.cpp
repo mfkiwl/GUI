@@ -480,7 +480,9 @@ void NeuropixThread::calibrateProbe()
 {
 
 	neuropix.neuropix_readADCCalibration();
+	neuropix.neuropix_writeADCCalibration();
 	neuropix.neuropix_readGainCorrection();
+	neuropix.neuropix_writeGainCorrection();
 
 }
 
