@@ -203,7 +203,9 @@ void HDF5Recording::writeData(AudioSampleBuffer& buffer)
 
 void HDF5Recording::writeEvent(int eventType, MidiMessage& event, int samplePosition)
 {
+	
     const uint8* dataptr = event.getRawData();
+
     if (eventType == GenericProcessor::TTL)
         eventFile->writeEvent(0,*(dataptr+2),*(dataptr+1),(void*)(dataptr+3),(*timestamps)[*(dataptr+1)]+samplePosition);
     else if (eventType == GenericProcessor::MESSAGE)

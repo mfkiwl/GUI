@@ -124,6 +124,7 @@ private:
     //uint64* eventCodeBuffer;
     //int* eventChannelState;
 	HeapBlock<uint64> eventCodeBuffer;
+	HeapBlock<uint64> eventCodeBuffer2;
 	HeapBlock<int> eventChannelState;
 
     int ttlState;

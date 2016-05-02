@@ -171,6 +171,7 @@ private:
 
 	uint8 option;
 	int numRefs;
+	int totalChans;
 
 };
 

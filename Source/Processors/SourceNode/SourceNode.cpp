@@ -94,6 +94,7 @@ SourceNode::SourceNode(const String& name_)
     timestamp = 0;
     //eventCodeBuffer = new uint64[10000]; //10000 samples per buffer max?
 	eventCodeBuffer.malloc(10000);
+	eventCodeBuffer2.malloc(10000);
 
 
 }
@@ -394,7 +395,7 @@ void SourceNode::process(AudioSampleBuffer& buffer,
 
 	if (isMultiSampleRate)
 	{
-		int nSamples2 = lfpBuffer->readAllFromBuffer(buffer, &timestamp, eventCodeBuffer, buffer.getNumSamples(), 384);
+		int nSamples2 = lfpBuffer->readAllFromBuffer(buffer, &timestamp, eventCodeBuffer2, buffer.getNumSamples(), 384);
 		setNumSamplesForNodeId(events, nSamples2, 99);
 	}
 
@@ -429,8 +430,8 @@ void SourceNode::process(AudioSampleBuffer& buffer,
                 if (state == 0)
                 {
 
-                    //std::cout << "OFF" << std::endl;
-                    //std::cout << c << std::endl;
+					std::cout << "OFF ";
+                    std::cout << c << std::endl;
                     // signal channel state is OFF
                     addEvent(events, // MidiBuffer
                              TTL,    // eventType
@@ -440,12 +441,13 @@ void SourceNode::process(AudioSampleBuffer& buffer,
 							 8,
 							 (uint8*)(&eventCodeBuffer[i])
                             );
+
                 }
                 else
                 {
 
-                    // std::cout << "ON" << std::endl;
-                    // std::cout << c << std::endl;
+					std::cout << "ON ";
+                    std::cout << c << std::endl;
 
                     // signal channel state is ON
                     addEvent(events, // MidiBuffer
@@ -464,6 +466,8 @@ void SourceNode::process(AudioSampleBuffer& buffer,
             }
         }
     }
+
+	std::cout << " " << std::endl;
 
 }
 

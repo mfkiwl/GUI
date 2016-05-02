@@ -125,32 +125,11 @@ void NeuropixThread::openConnection()
 	
 	if (option >= 2)
 	{
-		int totalChans;
-
-		if (option == 2)
-			totalChans = 384;
-		else
-			totalChans = 276;
-
 		for (int i = 0; i < totalChans; i++)
 		{
 			selectElectrode(i, 0, false);
 		}
 		selectElectrode(totalChans - 1, 0, true);
-
-		//for (int i = 0; i < 50; i++)
-		//{
-		//	selectElectrode(i, 1, false);
-		//}
-		//selectElectrode(totalChans, 1, true);
-
-		//setAllReferences(37, 1);
-
-		//for (int i = 0; i < 50; i++)
-		//{
-		//	selectElectrode(i, 0, false);
-		//}
-		//selectElectrode(totalChans, 0, true);
 	}
 
 	setAllReferences(0, 0);
@@ -183,9 +162,16 @@ int NeuropixThread::getProbeOption()
 	option = neuropix.neuropix_getOption();
 
 	if (option < 3)
+	{
 		numRefs = 10;
+		totalChans = 384;
+	}
 	else
+	{
 		numRefs = 7;
+		totalChans = 276;
+	}
+		
 
 	return option + 1;
 }
@@ -390,37 +376,59 @@ void NeuropixThread::setAllReferences(int refChan, int bankForReference)
 		{
 
 			int i; 
+			ShankConfigErrorCode ec;
 
 			for (i = 0; i < numRefs - 1; i++)
 			{
 				if (i == refSetting)
 				{
 					if (i == 0)
-						neuropix.neuropix_setExtRef(true, false);
+						ec = neuropix.neuropix_setExtRef(true, false);
 					else
-						neuropix.neuropix_selectElectrode(refChan-1, bankForReference, false);
+						ec = neuropix.neuropix_selectElectrode(refChan - 1, bankForReference, false);
+
+					//std::cout << "Selecting reference channel error code: " << ec << std::endl;
 				}
 
 				else
 				{
 					if (i == 0)
-						neuropix.neuropix_setExtRef(false, false);
+						ec = neuropix.neuropix_setExtRef(false, false);
 					else
-						neuropix.neuropix_selectElectrode(refs[i]-1, 0xFF, false);
+						ec = neuropix.neuropix_selectElectrode(refs[i] - 1, 0xFF, false);
+
+					//std::cout << "De-selecting reference channel error code: " << ec << std::endl;
 				}
 
 			}
 
 			i = numRefs - 1;
 
+			// write everything to shank in the last step:
 			if (i == refSetting)
-				neuropix.neuropix_selectElectrode(refs[i]-1, bankForReference, true);
+				ec = neuropix.neuropix_selectElectrode(refs[i] - 1, bankForReference, true);
 			else
-				neuropix.neuropix_selectElectrode(refs[i]-1, 0xFF, true);
+				ec = neuropix.neuropix_selectElectrode(refs[i] - 1, 0xFF, true);
+
+			//std::cout << "Final selection error code: " << ec << std::endl;
 		}
 	}
+
+	//ShankConfigErrorCode ec;
+	//if (refSetting == 0)
+	//	ec = neuropix.neuropix_setExtRef(true, true);
+	//else
+	//	ec = neuropix.neuropix_setExtRef(false, true);
+
+	//std::cout << "setExtRef error code: " << ec << std::endl;
 	
 	// update reference settings for probe:
+//	for (int i = 0; i < totalChans; i++)
+//	{
+//		neuropix.neuropix_setReference(i, (unsigned char)refSetting, false);
+	//}
+	//neuropix.neuropix_setReference(totalChans - 1, (unsigned char)refSetting, true);
+
 	BaseConfigErrorCode bcec = neuropix.neuropix_writeAllReferences((unsigned char)refSetting);
 
 	std::cout << "Set all references to " << refSetting << "; error code = " << bcec << std::endl;
@@ -479,10 +487,15 @@ void NeuropixThread::setRecordMode(bool record)
 void NeuropixThread::calibrateProbe()
 {
 
+	std::cout << "Reading ADC calibration settings..." << std::endl;
 	neuropix.neuropix_readADCCalibration();
+	std::cout << "Writing ADC calibration settings..." << std::endl;
 	neuropix.neuropix_writeADCCalibration();
+	std::cout << "Reading gain correction settings..." << std::endl;
 	neuropix.neuropix_readGainCorrection();
+	std::cout << "Writing gain correction settings..." << std::endl;
 	neuropix.neuropix_writeGainCorrection();
+	std::cout << "Done." << std::endl;
 
 }
 
@@ -525,6 +538,8 @@ bool NeuropixThread::updateBuffer()
 			dataBuffer->addToBuffer(data, &timestamp, &eventCode, 1);
 			timestamp += 1;
 		}
+
+		eventCode = 0;
 
 		if (sendLfp)
 			dataBuffer2->addToBuffer(data2, &timestamp, &eventCode, 1);
