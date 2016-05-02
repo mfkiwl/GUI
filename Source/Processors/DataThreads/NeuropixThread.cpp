@@ -423,11 +423,11 @@ void NeuropixThread::setAllReferences(int refChan, int bankForReference)
 	//std::cout << "setExtRef error code: " << ec << std::endl;
 	
 	// update reference settings for probe:
-//	for (int i = 0; i < totalChans; i++)
-//	{
-//		neuropix.neuropix_setReference(i, (unsigned char)refSetting, false);
+	//for (int i = 0; i < 5; i++)
+	//{
+	//	neuropix.neuropix_setReference(i, (unsigned char)refSetting, false);
 	//}
-	//neuropix.neuropix_setReference(totalChans - 1, (unsigned char)refSetting, true);
+	//BaseConfigErrorCode bcec = neuropix.neuropix_setReference(totalChans - 1, (unsigned char)refSetting, true);
 
 	BaseConfigErrorCode bcec = neuropix.neuropix_writeAllReferences((unsigned char)refSetting);
 
