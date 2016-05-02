@@ -205,6 +205,7 @@ void HDF5Recording::writeEvent(int eventType, MidiMessage& event, int samplePosi
 {
 	
     const uint8* dataptr = event.getRawData();
+	//std::cout << "Write event " << int(*(dataptr + 2)) << " " << int(*(dataptr + 1)) << std::endl;
 
     if (eventType == GenericProcessor::TTL)
         eventFile->writeEvent(0,*(dataptr+2),*(dataptr+1),(void*)(dataptr+3),(*timestamps)[*(dataptr+1)]+samplePosition);
