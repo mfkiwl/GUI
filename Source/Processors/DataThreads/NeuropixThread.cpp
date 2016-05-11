@@ -487,14 +487,10 @@ void NeuropixThread::setRecordMode(bool record)
 void NeuropixThread::calibrateProbe()
 {
 
-	std::cout << "Reading ADC calibration settings..." << std::endl;
-	neuropix.neuropix_readADCCalibration();
-	std::cout << "Writing ADC calibration settings..." << std::endl;
-	neuropix.neuropix_writeADCCalibration();
-	std::cout << "Reading gain correction settings..." << std::endl;
-	neuropix.neuropix_readGainCorrection();
-	std::cout << "Writing gain correction settings..." << std::endl;
-	neuropix.neuropix_writeGainCorrection();
+	std::cout << "Applying ADC calibration..." << std::endl;
+	neuropix.neuropix_applyAdcCalibrationFromEeprom();
+	std::cout << "Applying gain correction settings..." << std::endl;
+	neuropix.neuropix_applyGainCalibrationFromEeprom();
 	std::cout << "Done." << std::endl;
 
 }

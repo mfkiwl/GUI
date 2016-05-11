@@ -338,11 +338,16 @@ public:
    * This function establishes a data connection and a config link connection
    * with the FPGA and resets base/shank/test configuration with the default
    * values. It checks the compatibility of hardware and software version, and
-   * closes the connection if they are not compatible.
+   * closes the connection if they are not compatible. It reads the ASIC ID
+   * from EEPROM. It reads the ADC calibration from EEPROM, and applies it to
+   * the Base registers.
+   *
+   * @param headstage_select : selection for Penta Connect Board,
+   *                           otherwise not relevant. Valid range 0 to 4.
    *
    * @return OPEN_SUCCESS if sucessful
    */
-  OpenErrorCode neuropix_open();
+  OpenErrorCode neuropix_open(unsigned char headstage_select=0);
 
   /**
    * This function establishes a playback data connection and a dummy config
@@ -358,6 +363,22 @@ public:
    * This function closes the data and config link connection with the device.
    */
   virtual void neuropix_close();
+
+  /**
+   * this functions reads ADC calibration from EEPROM, put it in the calibration
+   * member, then writes it to the Base Register
+   *
+   * @return SUCCESS if sucessful
+   */
+  ErrorCode neuropix_applyAdcCalibrationFromEeprom();
+
+  /**
+   * this functions reads Gain calibration from EEPROM, put it in the calibration
+   * member, then writes it to the BS FPGA
+   *
+   * @return SUCCESS if sucessful
+   */
+  ErrorCode neuropix_applyGainCalibrationFromEeprom();
 
   /**
    * configure the Deserializer (to be done once after startup)
