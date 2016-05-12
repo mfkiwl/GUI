@@ -430,8 +430,8 @@ void SourceNode::process(AudioSampleBuffer& buffer,
                 if (state == 0)
                 {
 
-					std::cout << "OFF ";
-                    std::cout << c << std::endl;
+					//std::cout << "OFF ";
+                    //std::cout << c << std::endl;
                     // signal channel state is OFF
                     addEvent(events, // MidiBuffer
                              TTL,    // eventType
@@ -446,8 +446,8 @@ void SourceNode::process(AudioSampleBuffer& buffer,
                 else
                 {
 
-					std::cout << "ON ";
-                    std::cout << c << std::endl;
+					//std::cout << "ON ";
+                    //std::cout << c << std::endl;
 
                     // signal channel state is ON
                     addEvent(events, // MidiBuffer

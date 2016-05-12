@@ -477,11 +477,17 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
     annotationButton->addListener(this);
     annotationButton->setTooltip("Add annotation to selected channels");
 
-	calibrationButton = new UtilityButton("CALIBRATE", Font("Small Text", 12, Font::plain));
+	calibrationButton = new UtilityButton("CALIBRATE FROM EEPROM", Font("Small Text", 12, Font::plain));
 	calibrationButton->setRadius(3.0f);
-	calibrationButton->setBounds(400, 520, 90, 24);
+	calibrationButton->setBounds(400, 520, 200, 24);
 	calibrationButton->addListener(this);
-	calibrationButton->setTooltip("Load gain calibration settings");
+	calibrationButton->setTooltip("Load gain calibration settings from EEPROM");
+
+	calibrationButton2 = new UtilityButton("CALIBRATE FROM CSV", Font("Small Text", 12, Font::plain));
+	calibrationButton2->setRadius(3.0f);
+	calibrationButton2->setBounds(400, 560, 200, 24);
+	calibrationButton2->addListener(this);
+	calibrationButton2->setTooltip("Load gain calibration settings from CSV");
 
     addAndMakeVisible(lfpGainComboBox);
     addAndMakeVisible(apGainComboBox);
@@ -499,6 +505,7 @@ NeuropixInterface::NeuropixInterface(NeuropixThread* t, NeuropixEditor* e) : thr
     addAndMakeVisible(referenceViewButton);
     addAndMakeVisible(annotationButton);
 	addAndMakeVisible(calibrationButton);
+	//addAndMakeVisible(calibrationButton2);
 	//addAndMakeVisible(activityViewButton);
 
 	
@@ -918,6 +925,29 @@ void NeuropixInterface::buttonClicked(Button* button)
 			std::cout << "Calibrating probe..." << std::endl;
 			thread->calibrateProbe();
 			std::cout << "Calibration settings loaded." << std::endl;
+		}
+	}
+	else if (button == calibrationButton2)
+	{
+		if (!editor->acquisitionIsActive)
+		{
+			FileChooser chooseFileReaderFile("Please select the directory containing the calibration data...",
+				File::getCurrentWorkingDirectory(),
+				"*");
+
+			if (chooseFileReaderFile.browseForDirectory())
+			{
+				// Use the selected file
+				File csvDirectory = chooseFileReaderFile.getResult();
+
+				thread->calibrateFromCsv(csvDirectory);
+
+				// lastFilePath = fileToRead.getParentDirectory();
+
+				// thread->setFile(fileToRead.getFullPathName());
+
+				// fileNameLabel->setText(fileToRead.getFileName(),false);
+			}
 		}
 	}
 	

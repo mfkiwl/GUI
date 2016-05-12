@@ -116,6 +116,9 @@ public:
 	/** Loads calibration settings stored on EEPROM. */
 	void calibrateProbe();
 
+	/** Loads calibration settings from CSV. */
+	void calibrateFromCsv(File path);
+
 	/** Retrieve probe option. */
 	int getProbeOption();
 

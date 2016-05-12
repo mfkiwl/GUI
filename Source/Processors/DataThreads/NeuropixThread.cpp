@@ -113,11 +113,16 @@ void NeuropixThread::openConnection()
 	std::cout << "set datamode error code: " << err1 << std::endl;
 	DigitalControlErrorCode err0 = neuropix.neuropix_mode(ASIC_RECORDING);
 	std::cout << "set mode error code: " << err0 << std::endl;
-	DigitalControlErrorCode err3 = neuropix.neuropix_nrst(false);
-	std::cout << "nrst 1 error code: " << err3 << std::endl;
-	ErrorCode err4 = neuropix.neuropix_resetDatapath();
-	std::cout << "reset datapath error code: " << err4 << std::endl;
 
+	if (false)
+	{
+		DigitalControlErrorCode err3 = neuropix.neuropix_nrst(false);
+		std::cout << "nrst 1 error code: " << err3 << std::endl;
+		ErrorCode err4 = neuropix.neuropix_resetDatapath();
+		std::cout << "reset datapath error code: " << err4 << std::endl;
+		neuropix.neuropix_nrst(true);
+	}
+	
 	// set default parameters
 	getProbeOption();
 	setAllApGains(3);
@@ -186,12 +191,15 @@ bool NeuropixThread::startAcquisition()
 	dataBuffer2->clear();
 
 	// stop data stream
-	DigitalControlErrorCode err3 = neuropix.neuropix_nrst(false);
-	std::cout << "nrst 1 error code: " << err3 << std::endl;
+	if (false)
+	{
+		DigitalControlErrorCode err3 = neuropix.neuropix_nrst(false);
+		std::cout << "nrst 1 error code: " << err3 << std::endl;
 
-	// clear the buffer
-	ErrorCode err4 = neuropix.neuropix_resetDatapath();
-	std::cout << "reset datapath error code: " << err4 << std::endl;
+		// clear the buffer
+		ErrorCode err4 = neuropix.neuropix_resetDatapath();
+		std::cout << "reset datapath error code: " << err4 << std::endl;
+	}
 
 
 	if (internalTrigger)
@@ -225,8 +233,10 @@ bool NeuropixThread::startAcquisition()
 	eventCode = 0;
 	maxCounter = 0;
 	  
+	
+	
 	startTimer(500);
-	//startThread();
+	
 
 	return true;
 }
@@ -237,10 +247,11 @@ void NeuropixThread::timerCallback()
 	stopTimer();
 
 	// start data stream
-	DigitalControlErrorCode err5 = neuropix.neuropix_nrst(true);
-	std::cout << "nrst 2 error code: " << err5 << std::endl;
-
+	neuropix.neuropix_setNeuralStart();
 	startThread();
+
+	//DigitalControlErrorCode err5 = neuropix.neuropix_nrst(true);
+	//std::cout << "nrst 2 error code: " << err5 << std::endl;
 
 }
 
@@ -257,13 +268,17 @@ bool NeuropixThread::stopAcquisition()
 	if (recordToNpx)
 		neuropix.neuropix_stopRecording();
 
-	// stop data stream
-	DigitalControlErrorCode err3 = neuropix.neuropix_nrst(false);
-	std::cout << "nrst 1 error code: " << err3 << std::endl;
+	if (false)
+	{
+		// stop data stream
+		DigitalControlErrorCode err3 = neuropix.neuropix_nrst(false);
+		std::cout << "nrst 1 error code: " << err3 << std::endl;
 
-	// clear the buffer
-	ErrorCode err4 = neuropix.neuropix_resetDatapath();
-	std::cout << "reset datapath error code: " << err4 << std::endl;
+		// clear the buffer
+		ErrorCode err4 = neuropix.neuropix_resetDatapath();
+		std::cout << "reset datapath error code: " << err4 << std::endl;
+	}
+	
 
 	return true;
 }
@@ -492,6 +507,69 @@ void NeuropixThread::calibrateProbe()
 	std::cout << "Applying gain correction settings..." << std::endl;
 	neuropix.neuropix_applyGainCalibrationFromEeprom();
 	std::cout << "Done." << std::endl;
+
+}
+
+void NeuropixThread::calibrateFromCsv(File directory)
+{
+
+	// NOT WORKING //
+
+	std::vector<adcComp> adcCompC;
+	std::vector<adcPairCommon> adcPairCommonC;
+
+	//Read from csv and apply to API and read from API
+	std::cout << "Reading files from " << directory.getFullPathName() << std::endl;
+
+	File comparatorCsv = directory.getChildFile("Comparator calibration.csv");
+	File offsetCsv = directory.getChildFile("Offset calibration.csv");
+	File slopeCsv = directory.getChildFile("Slope calibration.csv");
+	File gainCsv = directory.getChildFile("Gain correction.csv");
+
+	std::cout << File::getCurrentWorkingDirectory().getFullPathName() << std::endl;
+
+	ReadCsvErrorCode err = neuropix.neuropix_readComparatorCalibrationFromCsv("Comparator calibration.csv");
+	std::cout << "Read comparator calibration error code: " << err << std::endl;
+	
+	err = neuropix.neuropix_readADCOffsetCalibrationFromCsv("Offset calibration.csv");
+	std::cout << "Read ADC offset calibration error code: " << err << std::endl;
+	
+	err = neuropix.neuropix_readADCSlopeCalibrationFromCsv("Slope calibration.csv");
+	std::cout << "Read ADC slope calibration error code: " << err << std::endl;
+	
+	//Read parameters from API
+	neuropix.neuropix_getADCCompCalibration(adcCompC);
+	
+	neuropix.neuropix_getADCPairCommonCalibration(adcPairCommonC); 
+	
+	std::cout << "Writing ADC calibration data to probe..." << std::endl;
+	//Write parameters to probe
+	for(int i = 0; i < 15; i = i+2)
+	{ 
+		neuropix.neuropix_ADCCalibration(i, adcCompC[2 * i].compP, adcCompC[2 * i].compN, adcCompC[2 * i + 2].compP, adcCompC[2 * i + 2].compN, adcPairCommonC[i].slope, adcPairCommonC[i].fine, adcPairCommonC[i].coarse, adcPairCommonC[i].cfix); 
+		neuropix.neuropix_ADCCalibration(i + 1, adcCompC[2 * i + 1].compP, adcCompC[2 * i + 1].compN, adcCompC[2 * i + 3].compP, adcCompC[2 * i + 3].compN, adcPairCommonC[i + 1].slope, adcPairCommonC[i + 1].fine, adcPairCommonC[i + 1].coarse, adcPairCommonC[i + 1].cfix);
+	}
+
+	std::vector<unsigned short> gainCorrectionData_;
+
+	std::cout << "Reading gain correction data..." << std::endl;
+	//Read gain correction from csv and apply to API member
+	neuropix.neuropix_readGainCalibrationFromCsv("Gain correction.csv");
+
+	//Read gain correction from API member
+	neuropix.neuropix_getGainCorrectionCalibration(gainCorrectionData_); 
+
+	//resize according to probe type
+	if (option < 2)
+		gainCorrectionData_.resize(384);
+	else if (option == 2)
+		gainCorrectionData_.resize(960);
+	else if (option == 3)
+		gainCorrectionData_.resize(966);
+	
+	//Write to basestation FPGA
+	std::cout << "Applying gain correction to probe..." << std::endl;
+	neuropix.neuropix_gainCorrection(gainCorrectionData_);
 
 }
 
