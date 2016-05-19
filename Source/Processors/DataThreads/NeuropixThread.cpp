@@ -585,6 +585,7 @@ bool NeuropixThread::updateBuffer()
 		float data[384];
 		float data2[384];
 
+		//
 		//if (counter <= 0)
 		//{
 		//	std::cout << packet.synchronization[0] << ", ";
